@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+
+{% block title %}All Loans - BankEase{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header">
+                <h4>All Loans</h4>
+            </div>
+            <div class="card-body">
+                {% if loans %}
+                    <div class="table-responsive">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Loan ID</th>
+                                    <th>Customer</th>
+                                    <th>Bank</th>
+                                    <th>Type</th>
+                                    <th>Amount</th>
+                                    <th>Interest Rate</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for loan in loans %}
+                                <tr>
+                                    <td>{{ loan.Loan_ID }}</td>
+                                    <td>{{ loan.Customer_Name }}</td>
+                                    <td>{{ loan.Bank_Name }}</td>
+                                    <td>{{ loan.Loan_Type }}</td>
+                                    <td>₹{{ loan.Amount }}</td>
+                                    <td>{{ loan.Interest_Rate }}%</td>
+                                    <td>{{ loan.Status }}</td>
+                                    <td>
+                                        {% if loan.Status == 'Pending' %}
+                                            <a href="{{ url_for('approve_loan', loan_id=loan.Loan_ID) }}" 
+                                               class="btn btn-sm btn-success">Approve</a>
+                                            <a href="{{ url_for('reject_loan', loan_id=loan.Loan_ID) }}" 
+                                               class="btn btn-sm btn-danger">Reject</a>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <p>No loans found.</p>
+                {% endif %}
+            </div>
+            <div class="card-footer">
+                <a href="{{ url_for('admin_dashboard') }}" class="btn btn-secondary">Back to Dashboard</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

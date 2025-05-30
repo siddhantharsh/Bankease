@@ -1,0 +1,93 @@
+{% extends "base.html" %}
+
+{% block title %}Make Investment Payment - BankEase{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-8 offset-md-2">
+            <div class="card">
+                <div class="card-header">
+                    <h4>Make Investment Payment</h4>
+                </div>
+                <div class="card-body">
+                    <!-- Investment Details -->
+                    <div class="investment-details mb-4">
+                        <h5>Investment Information</h5>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <p><strong>Investment ID:</strong> {{ investment.Investment_ID }}</p>
+                                <p><strong>Type:</strong> {{ investment.Investment_Type }}</p>
+                                <p><strong>Current Amount:</strong> ₹{{ investment.Amount }}</p>
+                            </div>
+                            <div class="col-md-6">
+                                <p><strong>Start Date:</strong> {{ investment.Start_Date.strftime('%Y-%m-%d') }}</p>
+                                <p><strong>Maturity Date:</strong> {{ investment.Maturity_Date.strftime('%Y-%m-%d') }}</p>
+                                <p><strong>Monthly Payment:</strong> ₹{{ investment.Monthly_Payment }}</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Payment Form -->
+                    <form method="POST" action="{{ url_for('make_investment_payment', investment_id=investment.Investment_ID) }}">
+                        <div class="mb-3">
+                            <label for="payment_account" class="form-label">Payment Account</label>
+                            <select class="form-select" id="payment_account" name="payment_account" required>
+                                <option value="">Select account...</option>
+                                {% for account in accounts %}
+                                <option value="{{ account.Account_Number }}" data-balance="{{ account.Balance }}">
+                                    {{ account.Account_Number }} - {{ account.Name }} (Balance: ₹{{ account.Balance }})
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="amount" class="form-label">Payment Amount</label>
+                            <div class="input-group">
+                                <span class="input-group-text">₹</span>
+                                <input type="number" class="form-control" id="amount" name="amount" 
+                                       min="0" step="0.01" required>
+                            </div>
+                            <div class="form-text">
+                                Suggested monthly payment: ₹{{ investment.Monthly_Payment }}
+                            </div>
+                        </div>
+
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary">Make Payment</button>
+                            <a href="{{ url_for('view_investments') }}" class="btn btn-secondary">Back to Investments</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('paymentForm');
+    const amountInput = document.getElementById('amount');
+    const paymentAccountSelect = document.getElementById('payment_account');
+    
+    // Set default amount to monthly payment
+    amountInput.value = {{ investment.Monthly_Payment }};
+    
+    // Validate form before submission
+    form.addEventListener('submit', function(e) {
+        const amount = parseFloat(amountInput.value);
+        const selectedOption = paymentAccountSelect.options[paymentAccountSelect.selectedIndex];
+        const balance = parseFloat(selectedOption.dataset.balance);
+        
+        if (amount <= 0) {
+            e.preventDefault();
+            alert('Amount must be positive');
+        } else if (amount > balance) {
+            e.preventDefault();
+            alert('Insufficient funds in selected account');
+        }
+    });
+});
+</script>
+{% endblock %} 

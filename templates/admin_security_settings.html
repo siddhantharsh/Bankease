@@ -1,0 +1,146 @@
+{% extends "base.html" %}
+
+{% block title %}Security Settings - BankEase{% endblock %}
+
+{% block content %}
+<div class="page-title">
+    <h1>Security Settings</h1>
+    <p>Manage account security settings</p>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <h5 class="mb-0">Account Security Settings</h5>
+    </div>
+    <div class="card-body">
+        {% if accounts %}
+            <div class="table-responsive">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Account Number</th>
+                            <th>Customer</th>
+                            <th>Bank</th>
+                            <th>Two-Factor Auth</th>
+                            <th>Fraud Alert</th>
+                            <th>Transaction Monitoring</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for account in accounts %}
+                        <tr>
+                            <td>{{ account.Account_Number }}</td>
+                            <td>{{ account.Customer_Name }}</td>
+                            <td>{{ account.Bank_Name }}</td>
+                            <td>
+                                <span class="badge bg-{{ 'success' if account.Security_Settings.get('Two-Factor Authentication') == 'Active' else 'danger' }}">
+                                    {{ account.Security_Settings.get('Two-Factor Authentication', 'Inactive') }}
+                                </span>
+                            </td>
+                            <td>
+                                <span class="badge bg-{{ 'success' if account.Security_Settings.get('Fraud Alert') == 'Active' else 'danger' }}">
+                                    {{ account.Security_Settings.get('Fraud Alert', 'Inactive') }}
+                                </span>
+                            </td>
+                            <td>
+                                <span class="badge bg-{{ 'success' if account.Security_Settings.get('Transaction Monitoring') == 'Active' else 'danger' }}">
+                                    {{ account.Security_Settings.get('Transaction Monitoring', 'Inactive') }}
+                                </span>
+                            </td>
+                            <td>
+                                <button type="button" class="btn btn-sm btn-primary" 
+                                        data-bs-toggle="modal" 
+                                        data-bs-target="#securityModal{{ account.Account_Number }}">
+                                    Update Settings
+                                </button>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <p class="text-center">No accounts found.</p>
+        {% endif %}
+    </div>
+</div>
+
+{% if accounts %}
+    {% for account in accounts %}
+    <div class="modal fade" id="securityModal{{ account.Account_Number }}" tabindex="-1" aria-labelledby="securityModalLabel{{ account.Account_Number }}" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content bg-dark">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="securityModalLabel{{ account.Account_Number }}">
+                        Update Security Settings - Account {{ account.Account_Number }}
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form method="POST" action="{{ url_for('admin_update_security', account_number=account.Account_Number) }}">
+                        <div class="mb-3">
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" 
+                                       id="two_factor{{ account.Account_Number }}" 
+                                       name="two_factor"
+                                       {{ 'checked' if account.Security_Settings.get('Two-Factor Authentication') == 'Active' }}>
+                                <label class="form-check-label" for="two_factor{{ account.Account_Number }}">
+                                    Two-Factor Authentication
+                                </label>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" 
+                                       id="fraud_alert{{ account.Account_Number }}" 
+                                       name="fraud_alert"
+                                       {{ 'checked' if account.Security_Settings.get('Fraud Alert') == 'Active' }}>
+                                <label class="form-check-label" for="fraud_alert{{ account.Account_Number }}">
+                                    Fraud Alert
+                                </label>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" 
+                                       id="transaction_monitoring{{ account.Account_Number }}" 
+                                       name="transaction_monitoring"
+                                       {{ 'checked' if account.Security_Settings.get('Transaction Monitoring') == 'Active' }}>
+                                <label class="form-check-label" for="transaction_monitoring{{ account.Account_Number }}">
+                                    Transaction Monitoring
+                                </label>
+                            </div>
+                        </div>
+                        <div class="text-end">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                            <button type="submit" class="btn btn-primary">Update Settings</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+{% endif %}
+
+<style>
+.form-check-input:checked {
+    background-color: #0d6efd;
+    border-color: #0d6efd;
+}
+
+.modal-content {
+    background-color: #212529;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.modal-header {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.modal-footer {
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+</style>
+{% endblock %} 

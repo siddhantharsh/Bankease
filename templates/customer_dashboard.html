@@ -1,0 +1,267 @@
+{% extends "base.html" %}
+
+{% block title %}Customer Dashboard - BankEase{% endblock %}
+
+{% block content %}
+<style>
+    .dashboard-welcome {
+        background: linear-gradient(135deg, #522546 0%, #88304E 100%);
+        padding: 2rem;
+        border-radius: 18px;
+        margin-bottom: 2rem;
+        box-shadow: 0 4px 20px rgba(247, 55, 79, 0.15);
+        animation: fadeIn 0.8s ease-out;
+    }
+
+    .dashboard-card {
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        animation: slideUp 0.5s ease-out;
+    }
+
+    .dashboard-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 25px rgba(247, 55, 79, 0.2);
+    }
+
+    .table-responsive {
+        border-radius: 12px;
+        overflow: hidden;
+    }
+
+    .table th {
+        background: #522546;
+        color: #fff;
+        font-weight: 600;
+        text-transform: uppercase;
+        font-size: 0.85rem;
+        letter-spacing: 0.5px;
+    }
+
+    .table td {
+        vertical-align: middle;
+    }
+
+    .btn {
+        transition: all 0.3s ease;
+        padding: 0.5rem 1rem;
+        font-weight: 500;
+        letter-spacing: 0.5px;
+    }
+
+    .btn:hover {
+        transform: translateY(-2px);
+    }
+
+    .quick-actions {
+        background: linear-gradient(135deg, #1a1a1a 0%, #181818 100%);
+        border: 1px solid #522546;
+        border-radius: 18px;
+        padding: 1.5rem;
+        margin-top: 2rem;
+    }
+
+    .quick-actions .btn {
+        margin: 0.5rem;
+        min-width: 200px;
+    }
+
+    @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
+
+    @keyframes slideUp {
+        from { 
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        to { 
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .card {
+        margin-bottom: 1.5rem;
+    }
+
+    .card-header {
+        padding: 1.25rem;
+    }
+
+    .card-body {
+        padding: 1.5rem;
+    }
+
+    .no-data-message {
+        text-align: center;
+        padding: 2rem;
+        color: #666;
+        font-style: italic;
+    }
+
+    .no-data-message a {
+        color: #F7374F;
+        text-decoration: none;
+        font-weight: 600;
+    }
+
+    .no-data-message a:hover {
+        text-decoration: underline;
+    }
+</style>
+
+<div class="page-title">
+    <h1>Welcome, {{ customer_name }}!</h1>
+    <p>Manage your accounts and transactions</p>
+</div>
+
+<div class="row">
+    <div class="col-md-10 offset-md-1">
+        <!-- Active Accounts Section -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h4>Your Active Accounts</h4>
+            </div>
+            <div class="card-body">
+                {% if accounts %}
+                    <div class="table-responsive">
+                    <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Account Number</th>
+                                    <th>Bank</th>
+                                    <th>Type</th>
+                                    <th>Balance</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for account in accounts %}
+                                <tr>
+                                    <td>{{ account.Account_Number }}</td>
+                                    <td>{{ account.Name }}</td>
+                                    <td>{{ account.Account_Type }}</td>
+                                    <td>₹{{ account.Balance }}</td>
+                                    <td>
+                                    <a href="{{ url_for('view_transactions', account_id=account.Account_Number) }}" class="btn btn-sm btn-info">View Transactions</a>
+                                    <a href="{{ url_for('transfer_money', account_id=account.Account_Number) }}" class="btn btn-sm btn-primary">Transfer Money</a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                <p class="text-center">No active accounts found.</p>
+                {% endif %}
+        </div>
+    </div>
+
+        <!-- Pending Accounts Section -->
+        {% if pending_accounts %}
+        <div class="card mb-4">
+            <div class="card-header">
+                <h4>Pending Accounts</h4>
+            </div>
+            <div class="card-body">
+                    <div class="table-responsive">
+                    <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Account Number</th>
+                                    <th>Bank</th>
+                                    <th>Type</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for account in pending_accounts %}
+                                <tr>
+                                    <td>{{ account.Account_Number }}</td>
+                                    <td>{{ account.Name }}</td>
+                                    <td>{{ account.Account_Type }}</td>
+                                    <td>
+                                    <span class="badge bg-warning">Pending</span>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Loans Section -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h4>Your Loans</h4>
+            </div>
+            <div class="card-body">
+                {% if loans %}
+                    <div class="table-responsive">
+                    <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Loan ID</th>
+                                    <th>Type</th>
+                                    <th>Amount</th>
+                                <th>Interest Rate</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for loan in loans %}
+                                <tr>
+                                    <td>{{ loan.Loan_ID }}</td>
+                                    <td>{{ loan.Loan_Type }}</td>
+                                    <td>₹{{ loan.Amount }}</td>
+                                <td>{{ loan.Interest_Rate }}%</td>
+                                    <td>
+                                    <span class="badge bg-{{ 'success' if loan.Status == 'Approved' else 'warning' if loan.Status == 'Pending' else 'danger' }}">
+                                            {{ loan.Status }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        {% if loan.Status == 'Approved' %}
+                                    <a href="{{ url_for('pay_loan', loan_id=loan.Loan_ID) }}" class="btn btn-sm btn-primary">Pay EMI</a>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                <p class="text-center">No loans found.</p>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="card">
+            <div class="card-header">
+                <h4>Quick Actions</h4>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-3">
+                        <a href="{{ url_for('apply_account') }}" class="btn btn-primary w-100 mb-3">Apply for New Account</a>
+                    </div>
+                    <div class="col-md-3">
+                        <a href="{{ url_for('apply_loan') }}" class="btn btn-success w-100 mb-3">Apply for Loan</a>
+                    </div>
+                    <div class="col-md-3">
+                        <a href="{{ url_for('view_security') }}" class="btn btn-info w-100 mb-3">Security Settings</a>
+                    </div>
+                    <div class="col-md-3">
+                        <a href="{{ url_for('view_investments') }}" class="btn btn-warning w-100 mb-3">My Investments</a>
+            </div>
+        </div>
+    </div>
+</div>
+    </div>
+</div>
+{% endblock %} 

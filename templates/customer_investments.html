@@ -1,0 +1,130 @@
+{% extends "base.html" %}
+
+{% block title %}My Investments - BankEase{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2>My Investments</h2>
+            <p class="text-muted">Manage your investments</p>
+        </div>
+        <a href="{{ url_for('new_investment') }}" class="btn btn-primary">
+            <i class="fas fa-plus me-2"></i>Add Investment
+        </a>
+    </div>
+
+    <!-- Active Investments -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5 class="mb-0">Active Investments</h5>
+        </div>
+        <div class="card-body">
+            {% if investments %}
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Investment ID</th>
+                                <th>Type</th>
+                                <th>Amount</th>
+                                <th>Start Date</th>
+                                <th>Maturity Date</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for investment in investments %}
+                                {% if investment.Status == 'Active' %}
+                                <tr>
+                                    <td>{{ investment.Investment_ID }}</td>
+                                    <td>{{ investment.Investment_Type }}</td>
+                                    <td>₹{{ "%.2f"|format(investment.Amount) }}</td>
+                                    <td>{{ investment.Start_Date }}</td>
+                                    <td>{{ investment.Maturity_Date }}</td>
+                                    <td>
+                                        <span class="badge bg-success">Active</span>
+                                    </td>
+                                    <td>
+                                        <div class="btn-group">
+                                            <a href="{{ url_for('view_investment_details', investment_id=investment.Investment_ID) }}" 
+                                               class="btn btn-primary btn-sm">
+                                                <i class="fas fa-eye me-1"></i>View Details
+                                            </a>
+                                            <form action="{{ url_for('close_investment', investment_id=investment.Investment_ID) }}" 
+                                                  method="POST" class="d-inline">
+                                                <button type="submit" class="btn btn-danger btn-sm" 
+                                                        onclick="return confirm('Are you sure you want to close this investment?')">
+                                                    <i class="fas fa-times-circle me-1"></i>Close
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endif %}
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <p class="text-muted">No active investments found</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Closed Investments -->
+    <div class="card">
+        <div class="card-header">
+            <h5 class="mb-0">Closed Investments</h5>
+        </div>
+        <div class="card-body">
+            {% if investments %}
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Investment ID</th>
+                                <th>Type</th>
+                                <th>Amount</th>
+                                <th>Start Date</th>
+                                <th>Maturity Date</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for investment in investments %}
+                                {% if investment.Status == 'Closed' %}
+                                <tr>
+                                    <td>{{ investment.Investment_ID }}</td>
+                                    <td>{{ investment.Investment_Type }}</td>
+                                    <td>₹{{ "%.2f"|format(investment.Amount) }}</td>
+                                    <td>{{ investment.Start_Date }}</td>
+                                    <td>{{ investment.Maturity_Date }}</td>
+                                    <td>
+                                        <span class="badge bg-secondary">Closed</span>
+                                    </td>
+                                    <td>
+                                        <a href="{{ url_for('view_investment_details', investment_id=investment.Investment_ID) }}" 
+                                           class="btn btn-primary btn-sm">
+                                            <i class="fas fa-eye me-1"></i>View Details
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% endif %}
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <p class="text-muted">No closed investments found</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<div class="text-center mt-4">
+    <a href="{{ url_for('customer_dashboard') }}" class="btn btn-outline-secondary">Go to Dashboard</a>
+</div>
+{% endblock %} 

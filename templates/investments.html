@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+
+{% block title %}My Investments - BankEase{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h4 class="mb-0">My Investments</h4>
+                    <a href="{{ url_for('new_investment') }}" class="btn btn-primary">New Investment</a>
+                </div>
+                <div class="card-body">
+                    {% if investments %}
+                    <div class="table-responsive">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Investment ID</th>
+                                    <th>Type</th>
+                                    <th>Amount</th>
+                                    <th>Start Date</th>
+                                    <th>Maturity Date</th>
+                                    <th>Progress</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for investment in investments %}
+                                <tr>
+                                    <td>{{ investment.Investment_ID }}</td>
+                                    <td>{{ investment.Investment_Type }}</td>
+                                    <td>₹{{ investment.Amount }}</td>
+                                    <td>{{ investment.Start_Date.strftime('%Y-%m-%d') }}</td>
+                                    <td>{{ investment.Maturity_Date.strftime('%Y-%m-%d') }}</td>
+                                    <td>
+                                        <div class="progress" style="height: 20px;">
+                                            <div class="progress-bar bg-success" role="progressbar" 
+                                                 style="width: {{ investment.progress }}%;" 
+                                                 aria-valuenow="{{ investment.progress }}" 
+                                                 aria-valuemin="0" 
+                                                 aria-valuemax="100">
+                                                {{ investment.progress|round|int }}%
+                                            </div>
+                                        </div>
+                                        <small class="text-muted">{{ investment.days_remaining }} days remaining</small>
+                                    </td>
+                                    <td>
+                                        <a href="{{ url_for('view_investment_details', investment_id=investment.Investment_ID) }}" 
+                                           class="btn btn-sm btn-info">View Details</a>
+                                        <a href="{{ url_for('make_investment_payment', investment_id=investment.Investment_ID) }}" 
+                                           class="btn btn-sm btn-success">Make Payment</a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="text-center py-4">
+                        <p class="mb-3">You don't have any investments yet.</p>
+                        <a href="{{ url_for('new_investment') }}" class="btn btn-primary">Start Investing</a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

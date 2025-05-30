@@ -1,0 +1,229 @@
+{% extends "base.html" %}
+
+{% block title %}Investment Details - BankEase{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>Investment Details</h2>
+    <p class="text-muted">View details of your investment</p>
+    
+    <!-- Action Buttons -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <div class="d-flex gap-2">
+                        {% if investment.Status == 'Active' %}
+                            <a href="{{ url_for('pay_investment', investment_id=investment.Investment_ID) }}" 
+                               class="btn btn-primary btn-lg">
+                                <i class="fas fa-money-bill-wave me-2"></i>Make Payment
+                            </a>
+                            <form action="{{ url_for('close_investment', investment_id=investment.Investment_ID) }}" 
+                                  method="POST" class="d-inline">
+                                <button type="submit" class="btn btn-danger btn-lg" 
+                                        onclick="return confirm('Are you sure you want to close this investment?')">
+                                    <i class="fas fa-times-circle me-2"></i>Close Investment
+                                </button>
+                            </form>
+                        {% endif %}
+                        <a href="{{ url_for('view_investments') }}" class="btn btn-secondary btn-lg">
+                            <i class="fas fa-arrow-left me-2"></i>Back to Investments
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Investment Information -->
+        <div class="col-md-6">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Investment Information</h5>
+                </div>
+                <div class="card-body">
+                    <table class="table">
+                        <tr>
+                            <th>Investment ID</th>
+                            <td>{{ investment.Investment_ID }}</td>
+                        </tr>
+                        <tr>
+                            <th>Type</th>
+                            <td>{{ investment.Investment_Type }}</td>
+                        </tr>
+                        <tr>
+                            <th>Amount</th>
+                            <td>₹{{ "%.2f"|format(investment.Amount) }}</td>
+                        </tr>
+                        <tr>
+                            <th>Monthly Payment</th>
+                            <td>₹{{ "%.2f"|format(investment.Monthly_Payment) }}</td>
+                        </tr>
+                        <tr>
+                            <th>Start Date</th>
+                            <td>{{ investment.Start_Date }}</td>
+                        </tr>
+                        <tr>
+                            <th>Maturity Date</th>
+                            <td>{{ investment.Maturity_Date }}</td>
+                        </tr>
+                        <tr>
+                            <th>Bank</th>
+                            <td>{{ investment.Bank_Name }}</td>
+                        </tr>
+                        <tr>
+                            <th>Account</th>
+                            <td>{{ investment.Account_Number }}</td>
+                        </tr>
+                        <tr>
+                            <th>Status</th>
+                            <td>
+                                <span class="badge bg-{{ 'success' if investment.Status == 'Active' else 'secondary' }}">
+                                    {{ investment.Status }}
+                                </span>
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Investment Progress -->
+        <div class="col-md-6">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Investment Progress</h5>
+                </div>
+                <div class="card-body">
+                    <div class="progress mb-3" style="height: 25px;">
+                        <div class="progress-bar" role="progressbar" 
+                             style="width: {{ investment.progress }}%;" 
+                             aria-valuenow="{{ investment.progress }}" 
+                             aria-valuemin="0" 
+                             aria-valuemax="100">
+                            {{ "%.1f"|format(investment.progress) }}%
+                        </div>
+                    </div>
+                    <p class="text-muted">
+                        Days remaining: {{ investment.days_remaining }} days
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Expected Returns -->
+        <div class="col-md-6">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Expected Returns</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="card bg-light mb-3">
+                                <div class="card-body text-center">
+                                    <h6>Return Rate</h6>
+                                    <p class="h4 text-success">{{ "%.1f"|format(investment.Return_Rate) }}%</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="card bg-light mb-3">
+                                <div class="card-body text-center">
+                                    <h6>Expected Return</h6>
+                                    <p class="h4 text-success">₹{{ "%.2f"|format(investment.Expected_Return) }}</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="card bg-light mb-3">
+                                <div class="card-body text-center">
+                                    <h6>Total Investment</h6>
+                                    <p class="h4">₹{{ "%.2f"|format(investment.Amount) }}</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="card bg-light mb-3">
+                                <div class="card-body text-center">
+                                    <h6>Expected Profit</h6>
+                                    <p class="h4 text-success">₹{{ "%.2f"|format(investment.Profit) }}</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Risk Assessment -->
+        <div class="col-md-6">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Risk Assessment</h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-4">
+                        <h6>Risk Level</h6>
+                        <div class="progress mb-2" style="height: 20px;">
+                            <div class="progress-bar bg-{{ 'success' if investment.Risk_Level <= 30 else 'warning' if investment.Risk_Level <= 60 else 'danger' }}" 
+                                 role="progressbar" 
+                                 style="width: {{ investment.Risk_Level }}%;">
+                                {{ 'Low' if investment.Risk_Level <= 30 else 'Medium' if investment.Risk_Level <= 60 else 'High' }}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mb-4">
+                        <h6>Market Volatility</h6>
+                        <div class="progress mb-2" style="height: 20px;">
+                            <div class="progress-bar bg-{{ 'success' if investment.Volatility <= 30 else 'warning' if investment.Volatility <= 60 else 'danger' }}" 
+                                 role="progressbar" 
+                                 style="width: {{ investment.Volatility }}%;">
+                                {{ 'Low' if investment.Volatility <= 30 else 'Medium' if investment.Volatility <= 60 else 'High' }}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Payment History -->
+        <div class="col-12">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Payment History</h5>
+                </div>
+                <div class="card-body">
+                    {% if payment_history %}
+                        <div class="table-responsive">
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th>Date</th>
+                                        <th>Amount</th>
+                                        <th>Type</th>
+                                        <th>Description</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for payment in payment_history %}
+                                        <tr>
+                                            <td>{{ payment.Formatted_Time }}</td>
+                                            <td>₹{{ "%.2f"|format(payment.Amount) }}</td>
+                                            <td>{{ payment.Transaction_Type }}</td>
+                                            <td>{{ payment.Description }}</td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <p class="text-muted">No payment history available</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

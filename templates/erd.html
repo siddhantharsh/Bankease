@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Banking Management System - Entity Relationship Diagram</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background: #f8f9fa;
+        }
+        .erd-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-top: 30px;
+        }
+        .erd-row {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 40px;
+        }
+        .entity {
+            background: #7ed957;
+            border: 2px solid #333;
+            border-radius: 10px;
+            min-width: 180px;
+            padding: 16px 24px 12px 24px;
+            margin: 0 40px;
+            position: relative;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+        .entity-title {
+            font-style: italic;
+            font-weight: bold;
+            font-size: 1.2rem;
+            text-align: center;
+            margin-bottom: 10px;
+        }
+        .attributes {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .attribute {
+            background: #7ee7f9;
+            border: 1.5px solid #333;
+            border-radius: 50px;
+            padding: 2px 18px;
+            margin: 4px 0;
+            font-size: 1rem;
+            min-width: 90px;
+            text-align: center;
+        }
+        .pk {
+            text-decoration: underline;
+            font-weight: bold;
+        }
+        .fk {
+            color: #fd7e14;
+            font-style: italic;
+        }
+        .relationship {
+            background: #ffb347;
+            border: 2px solid #b97a1a;
+            width: 90px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: #b22222;
+            margin: 0 10px;
+            transform: rotate(45deg);
+            position: relative;
+        }
+        .relationship span {
+            transform: rotate(-45deg);
+        }
+        .cardinality {
+            color: #b22222;
+            font-weight: bold;
+            font-size: 1rem;
+            position: absolute;
+        }
+        .cardinality.left {
+            left: -30px;
+            top: 50%;
+            transform: translateY(-50%);
+        }
+        .cardinality.right {
+            right: -30px;
+            top: 50%;
+            transform: translateY(-50%);
+        }
+        .legend {
+            background: #fff;
+            border: 2px solid #007bff;
+            border-radius: 10px;
+            padding: 18px 30px;
+            margin: 30px auto 0 auto;
+            max-width: 700px;
+        }
+        .legend-title {
+            font-weight: bold;
+            font-size: 1.2rem;
+            margin-bottom: 10px;
+        }
+        .legend-list {
+            list-style: none;
+            padding-left: 0;
+        }
+        .legend-list li {
+            margin-bottom: 6px;
+        }
+        .erd-title-block {
+            background: #fff;
+            border: 2px solid #007bff;
+            border-radius: 10px;
+            padding: 18px 30px;
+            margin: 30px auto 0 auto;
+            max-width: 700px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="erd-title-block">
+        <h1>Banking Management System</h1>
+        <h2 style="font-size:1.3rem;">Entity Relationship Diagram</h2>
+        <div style="font-size:1rem;">Version 1.0 | Author: Your Name | Date: 2024</div>
+    </div>
+    <div class="erd-container">
+        <!-- Top row: Bank, Admin, Investment -->
+        <div class="erd-row">
+            <div class="entity">
+                <div class="entity-title">Bank</div>
+                <div class="attributes">
+                    <div class="attribute pk">Bank_ID</div>
+                    <div class="attribute">Bank_Name</div>
+                    <div class="attribute">Branch</div>
+                    <div class="attribute">IFSC_Code</div>
+                </div>
+            </div>
+            <div class="entity">
+                <div class="entity-title">Admin</div>
+                <div class="attributes">
+                    <div class="attribute pk">Admin_ID</div>
+                    <div class="attribute">Name</div>
+                    <div class="attribute">Email</div>
+                    <div class="attribute">Role</div>
+                    <div class="attribute fk">Bank_ID</div>
+                </div>
+            </div>
+            <div class="entity">
+                <div class="entity-title">Investment</div>
+                <div class="attributes">
+                    <div class="attribute pk">Investment_ID</div>
+                    <div class="attribute">Investment_Type</div>
+                    <div class="attribute">Investment_Amount</div>
+                    <div class="attribute">Start_Date</div>
+                    <div class="attribute">Maturity_Date</div>
+                    <div class="attribute fk">Customer_ID</div>
+                </div>
+            </div>
+        </div>
+        <!-- Second row: Loan, Customer, Security -->
+        <div class="erd-row">
+            <div class="entity">
+                <div class="entity-title">Loan</div>
+                <div class="attributes">
+                    <div class="attribute pk">Loan_ID</div>
+                    <div class="attribute">Loan_Type</div>
+                    <div class="attribute">Loan_Amount</div>
+                    <div class="attribute">Interest_Rate</div>
+                    <div class="attribute">Loan_Term</div>
+                    <div class="attribute">Status</div>
+                    <div class="attribute fk">Customer_ID</div>
+                    <div class="attribute fk">Bank_ID</div>
+                </div>
+            </div>
+            <div class="entity">
+                <div class="entity-title">Customer</div>
+                <div class="attributes">
+                    <div class="attribute pk">Customer_ID</div>
+                    <div class="attribute">Name</div>
+                    <div class="attribute">Email</div>
+                    <div class="attribute">Phone</div>
+                    <div class="attribute">Address</div>
+                    <div class="attribute">Date_Of_Birth</div>
+                </div>
+            </div>
+            <div class="entity">
+                <div class="entity-title">Security</div>
+                <div class="attributes">
+                    <div class="attribute pk">Security_ID</div>
+                    <div class="attribute">Security_Type</div>
+                    <div class="attribute">Status</div>
+                    <div class="attribute">Last_Updated</div>
+                    <div class="attribute fk">Customer_ID</div>
+                </div>
+            </div>
+        </div>
+        <!-- Third row: Account, Payment, Transaction -->
+        <div class="erd-row">
+            <div class="entity">
+                <div class="entity-title">Account</div>
+                <div class="attributes">
+                    <div class="attribute pk">Account_Number</div>
+                    <div class="attribute">Account_Type</div>
+                    <div class="attribute">Balance</div>
+                    <div class="attribute fk">Customer_ID</div>
+                    <div class="attribute fk">Bank_ID</div>
+                </div>
+            </div>
+            <div class="entity">
+                <div class="entity-title">Payment</div>
+                <div class="attributes">
+                    <div class="attribute pk">Payment_ID</div>
+                    <div class="attribute">Payment_Amount</div>
+                    <div class="attribute">Payment_Date</div>
+                    <div class="attribute">Payment_Type</div>
+                    <div class="attribute fk">Customer_ID</div>
+                    <div class="attribute fk">Account_Number</div>
+                </div>
+            </div>
+            <div class="entity">
+                <div class="entity-title">Transaction</div>
+                <div class="attributes">
+                    <div class="attribute pk">Transaction_ID</div>
+                    <div class="attribute">Transaction_Type</div>
+                    <div class="attribute">Amount</div>
+                    <div class="attribute">Timestamp</div>
+                    <div class="attribute fk">Account_Number</div>
+                    <div class="attribute fk">Receiver_Account</div>
+                </div>
+            </div>
+        </div>
+        <!-- Relationships (as a legend, since lines are not possible in pure HTML/CSS) -->
+        <div class="legend">
+            <div class="legend-title">Legend & Relationships</div>
+            <ul class="legend-list">
+                <li><span class="entity" style="display:inline-block;width:60px;min-width:0;padding:2px 10px;">Entity</span> Rectangle: Table/Entity</li>
+                <li><span class="attribute" style="display:inline-block;width:60px;min-width:0;padding:2px 10px;">Attribute</span> Oval: Attribute</li>
+                <li><span class="attribute pk" style="display:inline-block;width:60px;min-width:0;padding:2px 10px;">PK</span> Underlined: Primary Key</li>
+                <li><span class="attribute fk" style="display:inline-block;width:60px;min-width:0;padding:2px 10px;">FK</span> Orange: Foreign Key</li>
+                <li><span class="relationship" style="display:inline-block;width:40px;height:20px;transform:rotate(45deg);margin:0 5px;"><span style="transform:rotate(-45deg);font-size:0.9em;">HAS</span></span> Diamond: Relationship</li>
+                <li><span class="cardinality left">1</span> <span class="cardinality right">N</span> Red: Cardinality (1, N, 1:N, etc.)</li>
+            </ul>
+            <div style="margin-top:10px;font-size:0.95em;">
+                <b>Relationships:</b><br>
+                Customer <span class="relationship"><span>HAS</span></span> Account (1:N)<br>
+                Bank <span class="relationship"><span>MAINTAINS</span></span> Account (1:N)<br>
+                Account <span class="relationship"><span>PERFORMS</span></span> Transaction (1:N)<br>
+                Customer <span class="relationship"><span>TAKES</span></span> Loan (1:N)<br>
+                Bank <span class="relationship"><span>PROVIDES</span></span> Loan (1:N)<br>
+                Customer <span class="relationship"><span>MAKES</span></span> Investment (1:N)<br>
+                Customer <span class="relationship"><span>HAS</span></span> Security (1:1)<br>
+                Bank <span class="relationship"><span>EMPLOYS</span></span> Admin (1:N)<br>
+                Customer <span class="relationship"><span>MAKES</span></span> Payment (1:N)<br>
+                Account <span class="relationship"><span>HAS</span></span> Payment (1:N)
+            </div>
+        </div>
+    </div>
+</body>
+</html> 

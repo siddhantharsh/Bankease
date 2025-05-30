@@ -1,0 +1,143 @@
+{% extends "base.html" %}
+
+{% block title %}Admin Dashboard - BankEase{% endblock %}
+
+{% block content %}
+<div class="page-title">
+    <h1>Admin Dashboard</h1>
+    <p>Manage accounts, loans, and transactions</p>
+</div>
+
+<div class="row">
+    <div class="col-md-4 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Quick Actions</h5>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-3">
+                    <a href="{{ url_for('view_all_accounts') }}" class="btn btn-primary">View All Accounts</a>
+                    <a href="{{ url_for('view_all_loans') }}" class="btn btn-success">View All Loans</a>
+                    <a href="{{ url_for('view_all_transactions') }}" class="btn btn-info">View All Transactions</a>
+                    <a href="{{ url_for('admin_security_settings') }}" class="btn btn-warning">Security Settings</a>
+                    <a href="{{ url_for('admin_view_investments') }}" class="btn btn-secondary">View Investments</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-8 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Pending Applications</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>Type</th>
+                                <th>Customer</th>
+                                <th>Amount</th>
+                                <th>Date</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for account in pending_accounts %}
+                            <tr>
+                                <td>Account</td>
+                                <td>{{ account.Name }}</td>
+                                <td>₹{{ account.Balance }}</td>
+                                <td>{{ account.Date_Applied }}</td>
+                                <td>
+                                    <a href="{{ url_for('approve_account', account_id=account.Account_Number) }}" class="btn btn-sm btn-success">Approve</a>
+                                    <a href="{{ url_for('reject_account', account_id=account.Account_Number) }}" class="btn btn-sm btn-danger">Reject</a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                            {% for loan in pending_loans %}
+                            <tr>
+                                <td>Loan</td>
+                                <td>{{ loan.Name }}</td>
+                                <td>₹{{ loan.Amount }}</td>
+                                <td>{{ loan.Date_Applied }}</td>
+                                <td>
+                                    <a href="{{ url_for('approve_loan', loan_id=loan.Loan_ID) }}" class="btn btn-sm btn-success">Approve</a>
+                                    <a href="{{ url_for('reject_loan', loan_id=loan.Loan_ID) }}" class="btn btn-sm btn-danger">Reject</a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                            {% if not pending_accounts and not pending_loans %}
+                            <tr>
+                                <td colspan="5" class="text-center">No pending applications</td>
+                            </tr>
+                            {% endif %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-6 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Recent Transactions</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Account</th>
+                                <th>Type</th>
+                                <th>Amount</th>
+                                <th>Date</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for transaction in recent_transactions %}
+                            <tr>
+                                <td>{{ transaction.From_Account }}</td>
+                                <td>{{ transaction.Transaction_Type }}</td>
+                                <td>₹{{ transaction.Amount }}</td>
+                                <td>{{ transaction.Date }}</td>
+                            </tr>
+                            {% endfor %}
+                            {% if not recent_transactions %}
+                            <tr>
+                                <td colspan="4" class="text-center">No recent transactions</td>
+                            </tr>
+                            {% endif %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">System Statistics</h5>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-3">
+                    <a href="{{ url_for('view_all_loans') }}" class="btn btn-lg btn-primary">
+                        Active Loans: {{ active_loans }}
+                    </a>
+                    <a href="{{ url_for('admin_view_investments') }}" class="btn btn-lg btn-success">
+                        Active Investments: {{ active_investments }}
+                    </a>
+                    <a href="{{ url_for('view_all_transactions') }}" class="btn btn-lg btn-info">
+                        Today's Transactions: {{ today_transactions }}
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

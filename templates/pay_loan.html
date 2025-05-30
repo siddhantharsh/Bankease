@@ -1,0 +1,227 @@
+{% extends "base.html" %}
+
+{% block title %}Pay Loan - BankEase{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-8 offset-md-2">
+            <div class="card">
+                <div class="card-header">
+                    <h4>Pay Loan EMI</h4>
+                </div>
+                <div class="card-body">
+                    <!-- Loan Progress -->
+                    <div class="loan-progress mb-4">
+                        <h5>Loan Progress</h5>
+                        {% set total_amount = loan.Amount + (loan.Amount * loan.Interest_Rate / 100) %}
+                        {% set paid_amount = total_amount - loan.Amount %}
+                        {% set progress = (paid_amount / total_amount * 100)|round %}
+                        <div class="progress mb-2" style="height: 25px;">
+                            <div class="progress-bar bg-success" role="progressbar" 
+                                 style="width: {{ progress }}%;" 
+                                 aria-valuenow="{{ progress }}" 
+                                 aria-valuemin="0" 
+                                 aria-valuemax="100">
+                                {{ progress }}%
+                            </div>
+                        </div>
+                        <div class="row text-center">
+                            <div class="col">
+                                <small class="text-muted">Total Amount</small>
+                                <p class="mb-0">₹{{ total_amount|round(2) }}</p>
+                            </div>
+                            <div class="col">
+                                <small class="text-muted">Paid Amount</small>
+                                <p class="mb-0">₹{{ paid_amount|round(2) }}</p>
+                            </div>
+                            <div class="col">
+                                <small class="text-muted">Remaining</small>
+                                <p class="mb-0">₹{{ loan.Amount }}</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Next Payment Due -->
+                    <div class="next-payment mb-4">
+                        <h5>Next Payment Due</h5>
+                        <div class="alert alert-info">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <p class="mb-1"><strong>Due Date:</strong> {{ payment_schedule[0].date }}</p>
+                                    <p class="mb-1"><strong>Amount Due:</strong> ₹{{ payment_schedule[0].emi }}</p>
+                                </div>
+                                <div class="col-md-6">
+                                    <p class="mb-1"><strong>Principal:</strong> ₹{{ payment_schedule[0].principal }}</p>
+                                    <p class="mb-1"><strong>Interest:</strong> ₹{{ payment_schedule[0].interest }}</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Loan Details -->
+                    <div class="loan-details mb-4">
+                        <h5>Loan Details</h5>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <p><strong>Loan ID:</strong> {{ loan.Loan_ID }}</p>
+                                <p><strong>Loan Type:</strong> {{ loan.Loan_Type }}</p>
+                                <p><strong>Bank:</strong> {{ loan.Bank_Name }}</p>
+                                <p><strong>Interest Rate:</strong> {{ loan.Interest_Rate }}%</p>
+                            </div>
+                            <div class="col-md-6">
+                                <p><strong>Remaining Amount:</strong> ₹{{ loan.Amount }}</p>
+                                <p><strong>Monthly EMI:</strong> ₹{{ emi }}</p>
+                                <p><strong>Total Payment:</strong> ₹{{ total_payment }}</p>
+                                <p><strong>Duration:</strong> {{ (loan.Duration_Days / 30)|round|int }} months</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Payment Form -->
+                    <form method="POST" id="paymentForm">
+                        <div class="mb-3">
+                            <label for="payment_account" class="form-label">Select Payment Account</label>
+                            <select class="form-select" id="payment_account" name="payment_account" required>
+                                <option value="">Choose an account...</option>
+                        {% for account in accounts %}
+                                <option value="{{ account.Account_Number }}" data-balance="{{ account.Balance }}">
+                                    {{ account.Bank_Name }} - {{ account.Account_Number }} (Balance: ₹{{ account.Balance }})
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                        <div class="mb-3">
+                    <label for="amount" class="form-label">Payment Amount</label>
+                            <div class="input-group">
+                                <span class="input-group-text">₹</span>
+                                <input type="number" class="form-control" id="amount" name="amount" 
+                                       min="0" step="0.01" value="{{ emi }}" required>
+                            </div>
+                            <div class="form-text">
+                                <span id="amountFeedback"></span>
+                                <br>
+                                <small class="text-muted">Recommended EMI: ₹{{ emi }}</small>
+                            </div>
+                        </div>
+
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary" id="submitBtn">Make Payment</button>
+                            <a href="{{ url_for('customer_dashboard') }}" class="btn btn-secondary">Back to Dashboard</a>
+                        </div>
+                    </form>
+
+                    <!-- Payment Schedule -->
+                    <div class="mt-4">
+                        <h5>Payment Schedule</h5>
+                        <div class="table-responsive">
+                            <table class="table table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>Month</th>
+                                        <th>Due Date</th>
+                                        <th>EMI</th>
+                                        <th>Principal</th>
+                                        <th>Interest</th>
+                                        <th>Remaining</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for payment in payment_schedule %}
+                                    <tr class="{{ 'table-success' if loop.first }}">
+                                        <td>{{ payment.month }}</td>
+                                        <td>{{ payment.date }}</td>
+                                        <td>₹{{ payment.emi }}</td>
+                                        <td>₹{{ payment.principal }}</td>
+                                        <td>₹{{ payment.interest }}</td>
+                                        <td>₹{{ payment.remaining }}</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Payment History -->
+                    {% if payment_history %}
+                    <div class="mt-4">
+                        <h5>Payment History</h5>
+                        <div class="table-responsive">
+                            <table class="table table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>Date</th>
+                                        <th>Amount</th>
+                                        <th>Account</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for payment in payment_history %}
+                                    <tr>
+                                        <td>{{ payment.Timestamp.strftime('%Y-%m-%d %H:%M') }}</td>
+                                        <td>₹{{ payment.Amount }}</td>
+                                        <td>{{ payment.Bank_Name }} - {{ payment.Account_Number }}</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+        </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const paymentAccount = document.getElementById('payment_account');
+    const amountInput = document.getElementById('amount');
+    const amountFeedback = document.getElementById('amountFeedback');
+    const submitBtn = document.getElementById('submitBtn');
+    const recommendedEMI = {{ emi }};
+    
+    function validateAmount() {
+        const amount = parseFloat(amountInput.value);
+        const selectedOption = paymentAccount.options[paymentAccount.selectedIndex];
+        const balance = parseFloat(selectedOption.dataset.balance);
+        
+        if (amount < recommendedEMI) {
+            amountFeedback.innerHTML = `<span class="text-warning">Amount is less than recommended EMI of ₹${recommendedEMI}</span>`;
+            submitBtn.disabled = true;
+        } else if (amount > balance) {
+            amountFeedback.innerHTML = `<span class="text-danger">Insufficient funds. Available balance: ₹${balance}</span>`;
+            submitBtn.disabled = true;
+        } else if (amount > {{ loan.Amount }}) {
+            amountFeedback.innerHTML = `<span class="text-danger">Amount exceeds remaining loan amount of ₹{{ loan.Amount }}</span>`;
+            submitBtn.disabled = true;
+        } else {
+            amountFeedback.innerHTML = `<span class="text-success">Amount is valid</span>`;
+            submitBtn.disabled = false;
+        }
+    }
+    
+    paymentAccount.addEventListener('change', function() {
+        const selectedOption = this.options[this.selectedIndex];
+        const balance = parseFloat(selectedOption.dataset.balance);
+        
+        // Update max amount based on account balance
+        amountInput.max = balance;
+        
+        // If current amount is greater than balance, set to balance
+        if (parseFloat(amountInput.value) > balance) {
+            amountInput.value = balance;
+        }
+        
+        validateAmount();
+    });
+    
+    amountInput.addEventListener('input', validateAmount);
+    
+    // Initial validation
+    validateAmount();
+});
+</script>
+{% endblock %} 

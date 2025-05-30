@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+
+{% block title %}All Transactions - BankEase{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header">
+                <h4>All Transactions</h4>
+            </div>
+            <div class="card-body">
+                {% if transactions %}
+                    <div class="table-responsive">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Account</th>
+                                    <th>Customer</th>
+                                    <th>Bank</th>
+                                    <th>Type</th>
+                                    <th>Description</th>
+                                    <th>Amount</th>
+                                    <th>Balance</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for transaction in transactions %}
+                                <tr>
+                                    <td>{{ transaction.Transaction_Date }}</td>
+                                    <td>{{ transaction.Account_Number }}</td>
+                                    <td>{{ transaction.Customer_Name }}</td>
+                                    <td>{{ transaction.Bank_Name }}</td>
+                                    <td>{{ transaction.Transaction_Type }}</td>
+                                    <td>{{ transaction.Description }}</td>
+                                    <td>₹{{ transaction.Amount }}</td>
+                                    <td>₹{{ transaction.Balance }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <p>No transactions found.</p>
+                {% endif %}
+            </div>
+            <div class="card-footer">
+                <a href="{{ url_for('admin_dashboard') }}" class="btn btn-secondary">Back to Dashboard</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

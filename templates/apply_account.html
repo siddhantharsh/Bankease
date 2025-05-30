@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+
+{% block title %}Apply for Account - BankEase{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="page-title">
+            <h1>Open New Account</h1>
+            <p>Start your banking journey with BankEase</p>
+        </div>
+
+        <div class="form-card">
+            <form method="POST" action="{{ url_for('apply_account') }}">
+                <div class="mb-4">
+                    <label for="bank_id" class="form-label">Select Bank</label>
+                    <select class="form-select" id="bank_id" name="bank_id" required>
+                        <option value="">Select Bank</option>
+                        {% for bank in banks %}
+                        <option value="{{ bank.Bank_ID }}">{{ bank.Name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="mb-4">
+                    <label for="account_type" class="form-label">Account Type</label>
+                    <select class="form-select" id="account_type" name="account_type" required>
+                        <option value="">Select Account Type</option>
+                        <option value="Savings">Savings Account</option>
+                        <option value="Current">Current Account</option>
+                        <option value="Fixed Deposit">Fixed Deposit Account</option>
+                    </select>
+                </div>
+                <div class="mb-4">
+                    <label for="initial_deposit" class="form-label">Initial Deposit</label>
+                    <input type="number" class="form-control" id="initial_deposit" name="initial_deposit" required min="0">
+                </div>
+                <button type="submit" class="btn btn-primary">Apply for Account</button>
+            </form>
+        </div>
+
+        <div class="text-center mt-4">
+            <a href="{{ url_for('customer_dashboard') }}" class="btn btn-outline-secondary">Back to Dashboard</a>
+        </div>
+    </div>
+</div>
+{% endblock %} 

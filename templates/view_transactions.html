@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+
+{% block title %}Transaction History - BankEase{% endblock %}
+
+{% block content %}
+<div class="page-title">
+    <h1>Transaction History</h1>
+    <p>View your account transactions</p>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <h5 class="mb-0">Account Transactions</h5>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Type</th>
+                        <th>Amount</th>
+                        <th>Description</th>
+                        <th>Transfer Details</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for transaction in transactions %}
+                    <tr>
+                        <td>{{ transaction.Timestamp.strftime('%Y-%m-%d %H:%M') }}</td>
+                        <td>
+                            {% if transaction.Transaction_Type == 'Transfer' %}
+                            <span class="badge bg-info">Transfer</span>
+                            {% elif transaction.Transaction_Type == 'Deposit' %}
+                            <span class="badge bg-success">Deposit</span>
+                            {% elif transaction.Transaction_Type == 'Withdrawal' %}
+                            <span class="badge bg-warning">Withdrawal</span>
+                            {% else %}
+                            <span class="badge bg-secondary">{{ transaction.Transaction_Type }}</span>
+                            {% endif %}
+                        </td>
+                        <td class="{{ 'text-success' if transaction.Transaction_Type == 'Deposit' else 'text-danger' }}">
+                            ₹{{ transaction.Amount }}
+                        </td>
+                        <td>{{ transaction.Description }}</td>
+                        <td>
+                            {% if transaction.Transaction_Type == 'Transfer' %}
+                                {% if transaction.Transfer_Direction == 'From' %}
+                                    <span class="text-danger">Sent to:</span><br>
+                                {% elif transaction.Transfer_Direction == 'To' %}
+                                    <span class="text-success">Received from:</span><br>
+                                {% endif %}
+                                Account: {{ transaction.Related_Account_Details.Account_Number }}<br>
+                                Customer: {{ transaction.Related_Account_Details.Customer_Name }}<br>
+                                Bank: {{ transaction.Related_Account_Details.Bank_Name }}
+                            {% elif transaction.Description and 'Investment' in transaction.Description %}
+                                <span class="text-info">Investment Details:</span><br>
+                                {{ transaction.Description }}
+                            {% elif transaction.Description and 'Loan' in transaction.Description %}
+                                <span class="text-primary">Loan Details:</span><br>
+                                {{ transaction.Description }}
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                    {% if not transactions %}
+                    <tr>
+                        <td colspan="6" class="text-center">No transactions found</td>
+                    </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<div class="text-center mt-4">
+    <a href="{{ url_for('customer_dashboard') }}" class="btn btn-outline-secondary">Back to Dashboard</a>
+</div>
+{% endblock %} 
