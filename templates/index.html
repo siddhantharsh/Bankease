@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+
+{% block title %}Welcome to BankEase{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8 text-center">
+        <h1 class="display-4 mb-4">Welcome to BankEase</h1>
+        <p class="lead mb-4">Your trusted partner in banking services</p>
+        
+        <div class="row mt-5">
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-body">
+                        <h3>For Customers</h3>
+                        <p>Access your accounts, manage loans, and make transactions securely.</p>
+                        <a href="{{ url_for('login') }}" class="btn btn-primary">Customer Login</a>
+                        <a href="{{ url_for('register') }}" class="btn btn-outline-primary">Register</a>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-body">
+                        <h3>For Administrators</h3>
+                        <p>Manage accounts, approve applications, and monitor transactions.</p>
+                        <a href="{{ url_for('login') }}" class="btn btn-success">Admin Login</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row mt-5">
+            <div class="col-md-12">
+                <div class="card">
+                    <div class="card-body">
+                        <h3>Our Services</h3>
+                        <div class="row mt-3">
+                            <div class="col-md-4">
+                                <h5>Account Management</h5>
+                                <p>Open and manage your accounts with ease</p>
+                            </div>
+                            <div class="col-md-4">
+                                <h5>Loan Services</h5>
+                                <p>Apply for loans and manage your payments</p>
+                            </div>
+                            <div class="col-md-4">
+                                <h5>Secure Transactions</h5>
+                                <p>Safe and secure money transfers</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

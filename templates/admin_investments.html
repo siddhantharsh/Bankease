@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+
+{% block title %}Investments - BankEase{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>All Investments</h2>
+    <p class="text-muted">View and manage customer investments</p>
+    
+    <div class="card">
+        <div class="card-body">
+            {% if investments %}
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Investment ID</th>
+                            <th>Customer</th>
+                            <th>Account</th>
+                            <th>Type</th>
+                            <th>Amount</th>
+                            <th>Monthly Payment</th>
+                            <th>Start Date</th>
+                            <th>Maturity Date</th>
+                            <th>Bank</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for investment in investments %}
+                        <tr>
+                            <td>{{ investment.Investment_ID }}</td>
+                            <td>{{ investment.Customer_Name }}</td>
+                            <td>{{ investment.Account_Number }}</td>
+                            <td>{{ investment.Investment_Type }}</td>
+                            <td>₹{{ "%.2f"|format(investment.Amount) }}</td>
+                            <td>₹{{ "%.2f"|format(investment.Monthly_Payment) }}</td>
+                            <td>{{ investment.Start_Date }}</td>
+                            <td>{{ investment.Maturity_Date }}</td>
+                            <td>{{ investment.Bank_Name }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="alert alert-info">
+                No investments found.
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %} 

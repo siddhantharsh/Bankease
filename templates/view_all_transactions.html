@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+
+{% block title %}All Transactions - BankEase{% endblock %}
+
+{% block content %}
+<div class="page-title">
+    <h1>All Transactions</h1>
+    <p>Monitor all financial transactions</p>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <h5 class="mb-0">Transaction History</h5>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>Transaction ID</th>
+                        <th>From Account</th>
+                        <th>To Account</th>
+                        <th>Amount</th>
+                        <th>Type</th>
+                        <th>Date</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for transaction in transactions %}
+                    <tr>
+                        <td>{{ transaction.Transaction_ID }}</td>
+                        <td>{{ transaction.From_Account }}</td>
+                        <td>{{ transaction.To_Account }}</td>
+                        <td>{{ transaction.Amount }}</td>
+                        <td>
+                            {% if transaction.Transaction_Type == 'Transfer' %}
+                            <span class="badge bg-info">Transfer</span>
+                            {% elif transaction.Transaction_Type == 'Deposit' %}
+                            <span class="badge bg-success">Deposit</span>
+                            {% elif transaction.Transaction_Type == 'Withdrawal' %}
+                            <span class="badge bg-warning">Withdrawal</span>
+                            {% else %}
+                            <span class="badge bg-secondary">{{ transaction.Transaction_Type }}</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ transaction.Date }}</td>
+                    </tr>
+                    {% endfor %}
+                    {% if not transactions %}
+                    <tr>
+                        <td colspan="6" class="text-center">No transactions found</td>
+                    </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %} 

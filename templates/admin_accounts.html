@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+
+{% block title %}All Accounts - BankEase{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header">
+                <h4>All Accounts</h4>
+            </div>
+            <div class="card-body">
+                {% if accounts %}
+                    <div class="table-responsive">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Account Number</th>
+                                    <th>Customer</th>
+                                    <th>Bank</th>
+                                    <th>Type</th>
+                                    <th>Balance</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for account in accounts %}
+                                <tr>
+                                    <td>{{ account.Account_Number }}</td>
+                                    <td>{{ account.Customer_Name }}</td>
+                                    <td>{{ account.Bank_Name }}</td>
+                                    <td>{{ account.Account_Type }}</td>
+                                    <td>₹{{ account.Balance }}</td>
+                                    <td>{{ account.Status }}</td>
+                                    <td>
+                                        <a href="{{ url_for('admin_view_transactions', account_id=account.Account_Number) }}" class="btn btn-sm btn-info">View Transactions</a>
+                                        {% if account.Status == 'Active' %}
+                                        <a href="{{ url_for('add_amount', account_id=account.Account_Number) }}" class="btn btn-sm btn-success">Add Amount</a>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <p>No accounts found.</p>
+                {% endif %}
+            </div>
+            <div class="card-footer">
+                <a href="{{ url_for('admin_dashboard') }}" class="btn btn-secondary">Back to Dashboard</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

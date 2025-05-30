@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+
+{% block title %}Transfer Money - BankEase{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="page-title">
+            <h1>Transfer Money</h1>
+            <p>Send money to any account securely</p>
+        </div>
+
+        <div class="form-card">
+            <form method="POST" action="{{ url_for('transfer_money', account_id=source_account.Account_Number) }}">
+                <div class="mb-4">
+                    <label class="form-label">From Account</label>
+                    <div class="p-3 mb-2 bg-dark rounded">
+                        <strong>Account #{{ source_account.Account_Number }}</strong><br>
+                        Bank: {{ source_account.Name }}<br>
+                        Balance: ₹{{ source_account.Balance }}
+                    </div>
+                </div>
+                <div class="mb-4">
+                    <label for="target_account" class="form-label">To Account Number</label>
+                    <input type="text" class="form-control" id="target_account" name="target_account" required placeholder="Enter recipient's account number">
+                </div>
+                <div class="mb-4">
+                    <label for="amount" class="form-label">Amount</label>
+                    <input type="number" class="form-control" id="amount" name="amount" required min="1">
+                </div>
+                <div class="mb-4">
+                    <label for="description" class="form-label">Description</label>
+                    <input type="text" class="form-control" id="description" name="description" required placeholder="Enter a description for this transfer">
+                </div>
+                <button type="submit" class="btn btn-primary">Transfer Money</button>
+            </form>
+        </div>
+
+        <div class="text-center mt-4">
+            <a href="{{ url_for('customer_dashboard') }}" class="btn btn-outline-secondary">Back to Dashboard</a>
+        </div>
+    </div>
+</div>
+{% endblock %} 

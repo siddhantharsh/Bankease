@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+
+{% block title %}Add Amount to Account - BankEase{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h3 class="text-center">Add Amount to Account</h3>
+            </div>
+            <div class="card-body">
+                <p><strong>Account Number:</strong> {{ account.Account_Number }}</p>
+                <p><strong>Customer Name:</strong> {{ account.Customer_Name }}</p>
+                <p><strong>Bank:</strong> {{ account.Bank_Name }}</p>
+                <p><strong>Current Balance:</strong> ₹{{ account.Balance }}</p>
+                <form method="POST">
+                    <div class="mb-3">
+                        <label for="amount" class="form-label">Amount to Add</label>
+                        <input type="number" class="form-control" id="amount" name="amount" min="1" required>
+                    </div>
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary">Add Amount</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

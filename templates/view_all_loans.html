@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+
+{% block title %}All Loans - BankEase{% endblock %}
+
+{% block content %}
+<div class="page-title">
+    <h1>All Loans</h1>
+    <p>Manage and monitor all loan applications</p>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <h5 class="mb-0">Loan List</h5>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>Loan ID</th>
+                        <th>Customer ID</th>
+                        <th>Amount</th>
+                        <th>Type</th>
+                        <th>Status</th>
+                        <th>Date Applied</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for loan in loans %}
+                    <tr>
+                        <td>{{ loan.Loan_ID }}</td>
+                        <td>{{ loan.Customer_ID }}</td>
+                        <td>{{ loan.Amount }}</td>
+                        <td>{{ loan.Loan_Type }}</td>
+                        <td>
+                            {% if loan.Status == 'Active' %}
+                            <span class="badge bg-success">Active</span>
+                            {% elif loan.Status == 'Pending' %}
+                            <span class="badge bg-warning">Pending</span>
+                            {% else %}
+                            <span class="badge bg-danger">Rejected</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ loan.Date_Applied }}</td>
+                        <td>
+                            {% if loan.Status == 'Pending' %}
+                            <a href="{{ url_for('approve_loan', loan_id=loan.Loan_ID) }}" class="btn btn-sm btn-success">Approve</a>
+                            <a href="{{ url_for('reject_loan', loan_id=loan.Loan_ID) }}" class="btn btn-sm btn-danger">Reject</a>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                    {% if not loans %}
+                    <tr>
+                        <td colspan="7" class="text-center">No loans found</td>
+                    </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %} 

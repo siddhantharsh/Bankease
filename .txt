@@ -1,0 +1,14 @@
+-- Step 1: Modify column definitions
+ALTER TABLE accounts
+MODIFY Balance DECIMAL(12,2) NOT NULL DEFAULT 0.00,
+MODIFY Account_Type ENUM('Savings', 'Current', 'Fixed Deposit') NOT NULL;
+
+-- Step 2: Add check constraints
+ALTER TABLE accounts
+ADD CONSTRAINT chk_balance CHECK (Balance >= 0),
+ADD CONSTRAINT chk_account_type CHECK (Account_Type IN ('Savings', 'Current', 'Fixed Deposit'));
+
+-- Step 3: Add foreign key constraints
+ALTER TABLE accounts
+ADD CONSTRAINT fk_customer FOREIGN KEY (Customer_ID) REFERENCES customers(Customer_ID),
+ADD CONSTRAINT fk_bank FOREIGN KEY (Bank_ID) REFERENCES bank(Bank_ID);

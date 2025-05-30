@@ -1,0 +1,111 @@
+{% extends "base.html" %}
+
+{% block title %}Security Settings - BankEase{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+<div class="row">
+        <div class="col-md-8 offset-md-2">
+            <!-- Password Settings Card -->
+            <div class="card mb-4">
+            <div class="card-header">
+                    <h4 class="mb-0">Password Settings</h4>
+            </div>
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('view_security') }}">
+                    <div class="mb-3">
+                        <label for="current_password" class="form-label">Current Password</label>
+                        <input type="password" class="form-control" id="current_password" name="current_password" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="new_password" class="form-label">New Password</label>
+                        <input type="password" class="form-control" id="new_password" name="new_password" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="confirm_password" class="form-label">Confirm New Password</label>
+                        <input type="password" class="form-control" id="confirm_password" name="confirm_password" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Update Password</button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Security Settings Cards -->
+            {% for account in accounts %}
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h4 class="mb-0">Security Settings for Account {{ account.Account_Number }} ({{ account.Bank_Name }})</h4>
+                </div>
+                <div class="card-body">
+                    <form method="POST" action="{{ url_for('update_security_settings', account_number=account.Account_Number) }}">
+                        <div class="form-check form-switch mb-3">
+                            <input class="form-check-input" type="checkbox" id="two_factor_{{ account.Account_Number }}" 
+                                   name="two_factor" {{ 'checked' if security_settings[account.Account_Number]['Two-Factor Authentication'] == 'Active' }}>
+                            <label class="form-check-label" for="two_factor_{{ account.Account_Number }}">
+                                Two-Factor Authentication
+                            </label>
+                            <small class="form-text text-muted d-block">
+                                Receive a verification code via SMS for important transactions
+                            </small>
+                        </div>
+
+                        <div class="form-check form-switch mb-3">
+                            <input class="form-check-input" type="checkbox" id="fraud_alert_{{ account.Account_Number }}" 
+                                   name="fraud_alert" {{ 'checked' if security_settings[account.Account_Number]['Fraud Alert'] == 'Active' }}>
+                            <label class="form-check-label" for="fraud_alert_{{ account.Account_Number }}">
+                                Fraud Alert
+                            </label>
+                            <small class="form-text text-muted d-block">
+                                Get notified of suspicious activities on your account
+                            </small>
+                        </div>
+
+                        <div class="form-check form-switch mb-3">
+                            <input class="form-check-input" type="checkbox" id="transaction_monitoring_{{ account.Account_Number }}" 
+                                   name="transaction_monitoring" {{ 'checked' if security_settings[account.Account_Number]['Transaction Monitoring'] == 'Active' }}>
+                            <label class="form-check-label" for="transaction_monitoring_{{ account.Account_Number }}">
+                                Transaction Monitoring
+                            </label>
+                            <small class="form-text text-muted d-block">
+                                Monitor and receive alerts for all account transactions
+                            </small>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary">Save Settings</button>
+                </form>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<style>
+.form-switch .form-check-input {
+    width: 3em;
+    height: 1.5em;
+    margin-top: 0.25em;
+    vertical-align: top;
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='-4 -4 8 8'%3e%3ccircle r='3' fill='rgba%280, 0, 0, 0.25%29'/%3e%3c/svg%3e");
+    background-position: left center;
+    border-radius: 2em;
+    transition: background-position .15s ease-in-out;
+}
+
+.form-switch .form-check-input:checked {
+    background-position: right center;
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='-4 -4 8 8'%3e%3ccircle r='3' fill='%23fff'/%3e%3c/svg%3e");
+}
+
+.form-check-input:checked {
+    background-color: #0d6efd;
+    border-color: #0d6efd;
+}
+
+.form-check-input:focus {
+    border-color: #86b7fe;
+    outline: 0;
+    box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+}
+</style>
+{% endblock %} 

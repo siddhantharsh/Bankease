@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+
+{% block title %}Apply for Loan - BankEase{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="page-title">
+            <h1>Apply for Loan</h1>
+            <p>Get the financial support you need</p>
+        </div>
+
+        <div class="form-card">
+            <form method="POST" action="{{ url_for('apply_loan') }}">
+                <div class="mb-4">
+                    <label for="loan_type" class="form-label">Loan Type</label>
+                    <select class="form-select" id="loan_type" name="loan_type" required>
+                        <option value="">Select Loan Type</option>
+                        <option value="Personal">Personal Loan</option>
+                        <option value="Home">Home Loan</option>
+                        <option value="Car">Car Loan</option>
+                        <option value="Education">Education Loan</option>
+                    </select>
+                    <div class="form-text">Choose the type of loan that best suits your needs</div>
+                </div>
+                <div class="mb-4">
+                    <label for="amount" class="form-label">Loan Amount</label>
+                    <div class="input-group">
+                        <span class="input-group-text">₹</span>
+                        <input type="number" class="form-control" id="amount" name="amount" required min="1" placeholder="Enter loan amount">
+                    </div>
+                    <div class="form-text">Enter the amount you wish to borrow</div>
+                </div>
+                <div class="mb-4">
+                    <label for="account_number" class="form-label">Select Account</label>
+                    <select class="form-select" id="account_number" name="account_number" required>
+                        <option value="">Select Account</option>
+                        {% for account in accounts %}
+                        <option value="{{ account.Account_Number }}">
+                            {{ account.Bank_Name }} - {{ account.Account_Number }} (Balance: ₹{{ account.Balance }})
+                        </option>
+                        {% endfor %}
+                    </select>
+                    <div class="form-text">Choose the account where you want to receive the loan amount</div>
+                </div>
+                <div class="mb-4">
+                    <label for="duration" class="form-label">Duration (months)</label>
+                    <select class="form-select" id="duration" name="duration" required>
+                        <option value="">Select Duration</option>
+                        <option value="12">12 months (1 year)</option>
+                        <option value="24">24 months (2 years)</option>
+                        <option value="36">36 months (3 years)</option>
+                        <option value="48">48 months (4 years)</option>
+                        <option value="60">60 months (5 years)</option>
+                    </select>
+                    <div class="form-text">Choose your preferred loan repayment period</div>
+                </div>
+                <div class="mb-4">
+                    <label for="purpose" class="form-label">Purpose</label>
+                    <textarea class="form-control" id="purpose" name="purpose" rows="3" required placeholder="Please describe why you need this loan"></textarea>
+                    <div class="form-text">Provide details about how you plan to use the loan amount</div>
+                </div>
+                <button type="submit" class="btn btn-primary">Apply for Loan</button>
+            </form>
+        </div>
+
+        <div class="text-center mt-4">
+            <a href="{{ url_for('customer_dashboard') }}" class="btn btn-outline-secondary">Back to Dashboard</a>
+        </div>
+    </div>
+</div>
+{% endblock %} 
