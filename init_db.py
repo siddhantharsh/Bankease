@@ -176,7 +176,7 @@ def seed_data(cursor):
         (4, 'Axis Bank', 'Axis Bank', 'Chennai T Nagar', 'AXIS0008765');
     """)
     # Reset sequence
-    cursor.execute("SELECT setval('bank_Bank_ID_seq', 4);")
+    cursor.execute("SELECT setval(pg_get_serial_sequence('bank', 'Bank_ID'), 4);")
 
     # Customers
     cursor.execute("""
@@ -186,7 +186,7 @@ def seed_data(cursor):
         (3, 'Rahul Mehta', 'rahul.mehta95@mail.in', 'password123', '9898765432', '78, Green Park, Delhi', '1995-11-05'),
         (4, 'Sneha Iyer', 'sneha.iyer90@mail.in', 'password123', '9786543210', '45, Besant Nagar, Chennai, Tamil Nadu', '1990-07-18');
     """)
-    cursor.execute("SELECT setval('customers_Customer_ID_seq', 4);")
+    cursor.execute("SELECT setval(pg_get_serial_sequence('customers', 'Customer_ID'), 4);")
 
     # Admins
     cursor.execute("""
@@ -196,7 +196,7 @@ def seed_data(cursor):
         (3, 3, 'Vikas Gupta', 'vikas.gupta@mail.in', 'admin123', 'Security Officer'),
         (4, 4, 'Anita Das', 'anita.das@mail.in', 'admin123', 'Manager');
     """)
-    cursor.execute("SELECT setval('admins_Admin_ID_seq', 4);")
+    cursor.execute("SELECT setval(pg_get_serial_sequence('admins', 'Admin_ID'), 4);")
 
     # Accounts
     cursor.execute("""
@@ -206,7 +206,7 @@ def seed_data(cursor):
         (3, 3, 3, 'Savings', 120000.75, 'Active', CURRENT_TIMESTAMP),
         (4, 4, 4, 'Fixed Deposit', 250000.00, 'Active', CURRENT_TIMESTAMP);
     """)
-    cursor.execute("SELECT setval('accounts_Account_Number_seq', 4);")
+    cursor.execute("SELECT setval(pg_get_serial_sequence('accounts', 'Account_Number'), 4);")
 
     # Transactions
     cursor.execute("""
@@ -216,7 +216,7 @@ def seed_data(cursor):
         (3, 3, 'Transfer', 20000.00, CURRENT_TIMESTAMP, 'Transfer to 1', 1),
         (4, 4, 'Deposit', 15000.00, CURRENT_TIMESTAMP, 'Cash deposit', NULL);
     """)
-    cursor.execute("SELECT setval('transactions_Transaction_ID_seq', 4);")
+    cursor.execute("SELECT setval(pg_get_serial_sequence('transactions', 'Transaction_ID'), 4);")
 
     # Loans
     cursor.execute("""
@@ -226,7 +226,7 @@ def seed_data(cursor):
         (3, 3, 3, 3, 'Personal', 300000.00, 300000.00, 10.5, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP + INTERVAL '36 months', 36, 'Rejected'),
         (4, 4, 4, 4, 'Business', 1500000.00, 1500000.00, 8.0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP + INTERVAL '120 months', 120, 'Approved');
     """)
-    cursor.execute("SELECT setval('loans_Loan_ID_seq', 4);")
+    cursor.execute("SELECT setval(pg_get_serial_sequence('loans', 'Loan_ID'), 4);")
 
     # Security
     cursor.execute("""
@@ -236,7 +236,7 @@ def seed_data(cursor):
         (3, 3, 'Transaction Monitoring', 'Inactive', CURRENT_TIMESTAMP),
         (4, 4, 'Two-Factor Authentication', 'Active', CURRENT_TIMESTAMP);
     """)
-    cursor.execute("SELECT setval('security_Security_ID_seq', 4);")
+    cursor.execute("SELECT setval(pg_get_serial_sequence('security', 'Security_ID'), 4);")
 
     # Investments
     cursor.execute("""
@@ -246,7 +246,7 @@ def seed_data(cursor):
         (3, 3, 'Bonds', 50000.00, 50000.00, '2021-03-10', '2026-03-10', 'Active', 8.0, 4166.67, 3, 'ICICI Bank', 3),
         (4, 4, 'Stocks', 250000.00, 250000.00, '2020-12-20', '2025-12-20', 'Active', 12.0, 20833.33, 4, 'Axis Bank', 4);
     """)
-    cursor.execute("SELECT setval('investments_Investment_ID_seq', 4);")
+    cursor.execute("SELECT setval(pg_get_serial_sequence('investments', 'Investment_ID'), 4);")
 
     # Payments
     cursor.execute("""
@@ -256,7 +256,7 @@ def seed_data(cursor):
         (3, 3, 3, 12000.00, '2024-02-10', 'Loan EMI'),
         (4, 4, 4, 15000.00, '2024-02-15', 'Credit Card');
     """)
-    cursor.execute("SELECT setval('payments_Payment_ID_seq', 4);")
+    cursor.execute("SELECT setval(pg_get_serial_sequence('payments', 'Payment_ID'), 4);")
 
     print("Seed data inserted successfully.")
 
