@@ -187,7 +187,7 @@ def apply_loan():
             conn = get_db_connection()
             cursor = conn.cursor()
             cursor.execute("""
-                SELECT Account_Number 
+                SELECT Account_Number, Bank_ID 
                 FROM accounts 
                 WHERE Account_Number = %s AND Customer_ID = %s AND Status = 'Active'
             """, (account_number, current_user.id))
@@ -205,12 +205,12 @@ def apply_loan():
             # Insert new loan application
             cursor.execute("""
                 INSERT INTO loans (
-                    Customer_ID, Account_Number, Loan_Type, Amount, 
-                    Interest_Rate, Start_Date, End_Date, Status, Application_Date
-                ) VALUES (%s, %s, %s, %s, 8.5, %s, %s, 'Pending', %s)
+                    Customer_ID, Account_Number, Bank_ID, Loan_Type, Amount, Loan_Amount,
+                    Interest_Rate, Start_Date, End_Date, Loan_Term, Status, Application_Date
+                ) VALUES (%s, %s, %s, %s, %s, %s, 8.5, %s, %s, %s, 'Pending', %s)
             """, (
-                current_user.id, account_number, loan_type, amount,
-                start_date, end_date, current_time
+                current_user.id, account_number, account['Bank_ID'], loan_type, amount, amount,
+                start_date, end_date, int(duration), current_time
             ))
             conn.commit()
             
@@ -1458,13 +1458,13 @@ def new_investment():
             # Create investment
             cursor.execute("""
                 INSERT INTO investments (
-                    Customer_ID, Investment_Type, Amount, Start_Date, 
+                    Customer_ID, Investment_Type, Amount, Investment_Amount, Start_Date, 
                     Maturity_Date, Status, Return_Rate, Monthly_Payment,
                     Payment_Account, Bank_Name, Account_Number
-                ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
                 RETURNING "Investment_ID"
             """, (
-                current_user.id, investment_type, amount, start_date,
+                current_user.id, investment_type, amount, amount, start_date,
                 maturity_date, 'Active', return_rate, monthly_payment,
                 account_number, account['Bank_Name'], account_number
             ))

@@ -89,15 +89,15 @@ def create_tables(cursor):
             "Loan_ID" SERIAL PRIMARY KEY,
             "Customer_ID" INT NOT NULL REFERENCES customers("Customer_ID") ON DELETE CASCADE,
             "Account_Number" INT REFERENCES accounts("Account_Number"),
-            "Bank_ID" INT NOT NULL REFERENCES bank("Bank_ID") ON DELETE CASCADE,
+            "Bank_ID" INT REFERENCES bank("Bank_ID") ON DELETE CASCADE,
             "Loan_Type" VARCHAR(20) NOT NULL CHECK ("Loan_Type" IN ('Home', 'Car', 'Personal', 'Business')),
             "Amount" DECIMAL(12,2),
-            "Loan_Amount" DECIMAL(12,2) NOT NULL,
-            "Interest_Rate" REAL NOT NULL,
+            "Loan_Amount" DECIMAL(12,2),
+            "Interest_Rate" REAL NOT NULL DEFAULT 8.5,
             "Start_Date" TIMESTAMP,
             "End_Date" TIMESTAMP,
             "Application_Date" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            "Loan_Term" INT NOT NULL,
+            "Loan_Term" INT,
             "Status" VARCHAR(20) NOT NULL CHECK ("Status" IN ('Approved', 'Pending', 'Rejected', 'Paid'))
         );
     """)
@@ -121,7 +121,7 @@ def create_tables(cursor):
             "Customer_ID" INT NOT NULL REFERENCES customers("Customer_ID") ON DELETE CASCADE,
             "Investment_Type" VARCHAR(50) NOT NULL,
             "Amount" DECIMAL(12,2),
-            "Investment_Amount" DECIMAL(12,2) NOT NULL,
+            "Investment_Amount" DECIMAL(12,2),
             "Start_Date" DATE NOT NULL,
             "Maturity_Date" DATE NOT NULL,
             "Status" VARCHAR(20) NOT NULL DEFAULT 'Active' CHECK ("Status" IN ('Active', 'Closed', 'Matured')),
