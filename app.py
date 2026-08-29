@@ -1,21 +1,23 @@
 from flask import Flask, render_template, request, redirect, url_for, flash, session
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
-import mysql.connector
+import psycopg
+from psycopg.rows import dict_row
 from datetime import datetime, timedelta
 from werkzeug.security import check_password_hash, generate_password_hash
+import os
 
 app = Flask(__name__)
-app.secret_key = 'your_secret_key_here'
+app.secret_key = os.environ.get('SECRET_KEY', 'your_secret_key_here')
 
-# Database configuration
-db_config = {
-    'host': '127.0.0.1',  # Using IP address instead of localhost
-    'user': 'root',
-    'password': 'root',
-    'database': 'bankease',
-    'port': 3306,
-    'auth_plugin': 'mysql_native_password'  # Explicitly set authentication plugin
-}
+# Database configuration - uses DATABASE_URL from Render, falls back to local
+DATABASE_URL = os.environ.get('DATABASE_URL', 'postgresql://root:root@127.0.0.1:5432/bankease')
+
+def get_db_connection():
+    """Get a PostgreSQL database connection."""
+    conn = psycopg.connect(DATABASE_URL, row_factory=dict_row)
+    return conn
+
+
 
 # Initialize login manager
 login_manager = LoginManager()
@@ -29,8 +31,8 @@ class User(UserMixin):
 
 @login_manager.user_loader
 def load_user(user_id):
-    conn = mysql.connector.connect(**db_config)
-    cursor = conn.cursor(dictionary=True)
+    conn = get_db_connection()
+    cursor = conn.cursor()
     
     # Check if user is admin
     cursor.execute("SELECT Admin_ID FROM admins WHERE Admin_ID = %s", (user_id,))
@@ -63,8 +65,8 @@ def login():
         email = request.form['email']
         password = request.form['password']
         
-        conn = mysql.connector.connect(**db_config)
-        cursor = conn.cursor(dictionary=True)
+        conn = get_db_connection()
+        cursor = conn.cursor()
         
         # Check admin login
         cursor.execute("SELECT Admin_ID FROM admins WHERE Email = %s AND Password = %s", (email, password))
@@ -98,7 +100,7 @@ def register():
         address = request.form['address']
         dob = request.form['dob']
         
-        conn = mysql.connector.connect(**db_config)
+        conn = get_db_connection()
         cursor = conn.cursor()
         
         try:
@@ -109,7 +111,7 @@ def register():
             conn.commit()
             flash('Registration successful! Please login.')
             return redirect(url_for('login'))
-        except mysql.connector.Error as err:
+        except psycopg2.Error as err:
             flash(f'Error: {err}')
         finally:
             cursor.close()
@@ -138,7 +140,7 @@ def apply_account():
                 flash('Initial deposit cannot be negative', 'danger')
                 return redirect(url_for('apply_account'))
             # Insert new account
-            conn = mysql.connector.connect(**db_config)
+            conn = get_db_connection()
             cursor = conn.cursor()
             cursor.execute("""
                 INSERT INTO accounts (Customer_ID, Bank_ID, Account_Type, Balance, Status, Date_Opened)
@@ -154,8 +156,8 @@ def apply_account():
             return redirect(url_for('apply_account'))
     
     # Get available banks for the form
-    conn = mysql.connector.connect(**db_config)
-    cursor = conn.cursor(dictionary=True)
+    conn = get_db_connection()
+    cursor = conn.cursor()
     cursor.execute("SELECT Bank_ID, Name FROM bank")
     banks = cursor.fetchall()
     cursor.close()
@@ -182,8 +184,8 @@ def apply_loan():
         
         try:
             # Verify account belongs to customer
-            conn = mysql.connector.connect(**db_config)
-            cursor = conn.cursor(dictionary=True)
+            conn = get_db_connection()
+            cursor = conn.cursor()
             cursor.execute("""
                 SELECT Account_Number 
                 FROM accounts 
@@ -223,8 +225,8 @@ def apply_loan():
             conn.close()
     
     # Get customer's active accounts for the form
-    conn = mysql.connector.connect(**db_config)
-    cursor = conn.cursor(dictionary=True)
+    conn = get_db_connection()
+    cursor = conn.cursor()
     cursor.execute("""
         SELECT a.*, b.Name as Bank_Name 
         FROM accounts a 
@@ -244,7 +246,7 @@ def approve_account(account_id):
         flash('Access denied. Please log in as an admin.', 'danger')
         return redirect(url_for('login'))
     
-    conn = mysql.connector.connect(**db_config)
+    conn = get_db_connection()
     cursor = conn.cursor()
     
     try:
@@ -270,7 +272,7 @@ def reject_account(account_id):
         flash('Access denied. Please log in as an admin.', 'danger')
         return redirect(url_for('login'))
     
-    conn = mysql.connector.connect(**db_config)
+    conn = get_db_connection()
     cursor = conn.cursor()
     
     try:
@@ -296,8 +298,8 @@ def approve_loan(loan_id):
         flash('Access denied. Please log in as an admin.', 'danger')
         return redirect(url_for('login'))
     
-    conn = mysql.connector.connect(**db_config)
-    cursor = conn.cursor(dictionary=True)
+    conn = get_db_connection()
+    cursor = conn.cursor()
     
     try:
         # Get loan details
@@ -352,7 +354,7 @@ def reject_loan(loan_id):
         flash('Access denied. Please log in as an admin.', 'danger')
         return redirect(url_for('login'))
     
-    conn = mysql.connector.connect(**db_config)
+    conn = get_db_connection()
     cursor = conn.cursor()
     
     try:
@@ -377,13 +379,13 @@ def admin_dashboard():
     if current_user.role != 'admin':
         return redirect(url_for('index'))
     
-    conn = mysql.connector.connect(**db_config)
-    cursor = conn.cursor(dictionary=True)
+    conn = get_db_connection()
+    cursor = conn.cursor()
     
     # Get pending accounts with formatted date
     cursor.execute("""
         SELECT a.*, c.Name, c.Email, b.Name as Bank_Name,
-               DATE_FORMAT(a.Date_Opened, '%Y-%m-%d %H:%i:%s') as Date_Applied
+               TO_CHAR(a."Date_Opened", 'YYYY-MM-DD HH24:MI:SS') as "Date_Applied"
         FROM accounts a 
         JOIN customers c ON a.Customer_ID = c.Customer_ID 
         JOIN bank b ON a.Bank_ID = b.Bank_ID
@@ -395,7 +397,7 @@ def admin_dashboard():
     # Get pending loans
     cursor.execute("""
         SELECT l.*, c.Name, c.Email, 
-               DATE_FORMAT(l.Application_Date, '%Y-%m-%d %H:%i:%s') as Date_Applied
+               TO_CHAR(l."Application_Date", 'YYYY-MM-DD HH24:MI:SS') as "Date_Applied"
         FROM loans l 
         JOIN customers c ON l.Customer_ID = c.Customer_ID 
         WHERE l.Status = 'Pending'
@@ -408,11 +410,11 @@ def admin_dashboard():
         SELECT t.*, 
                a.Account_Number as From_Account,
                CASE 
-                   WHEN t.Transaction_Type = 'Transfer' AND t.Description LIKE 'Transfer to%' THEN 
-                       REGEXP_SUBSTR(t.Description, '[0-9]+')
+                   WHEN t."Transaction_Type" = 'Transfer' AND t."Description" LIKE 'Transfer to%' THEN 
+                       substring(t."Description" from '[0-9]+')
                    ELSE NULL 
                END as To_Account,
-               DATE_FORMAT(t.Timestamp, '%Y-%m-%d %H:%i:%s') as Date
+               TO_CHAR(t."Timestamp", 'YYYY-MM-DD HH24:MI:SS') as "Date"
         FROM transactions t 
         JOIN accounts a ON t.Account_Number = a.Account_Number 
         ORDER BY t.Timestamp DESC 
@@ -432,7 +434,7 @@ def admin_dashboard():
     cursor.execute("""
         SELECT COUNT(*) as count 
         FROM transactions 
-        WHERE DATE(Timestamp) = CURDATE()
+        WHERE DATE("Timestamp") = CURRENT_DATE
     """)
     today_transactions = cursor.fetchone()['count']
     
@@ -454,8 +456,8 @@ def customer_dashboard():
         flash('Access denied. Please log in as a customer.', 'danger')
         return redirect(url_for('login'))
     
-    conn = mysql.connector.connect(**db_config)
-    cursor = conn.cursor(dictionary=True)
+    conn = get_db_connection()
+    cursor = conn.cursor()
     # Fetch customer name
     cursor.execute("SELECT Name FROM customers WHERE Customer_ID = %s", (current_user.id,))
     customer_row = cursor.fetchone()
@@ -523,8 +525,8 @@ def view_transactions(account_id):
         return redirect(url_for('login'))
     
     # Verify account belongs to customer
-    conn = mysql.connector.connect(**db_config)
-    cursor = conn.cursor(dictionary=True)
+    conn = get_db_connection()
+    cursor = conn.cursor()
     cursor.execute("""
         SELECT a.*, b.Name 
         FROM accounts a 
@@ -542,9 +544,9 @@ def view_transactions(account_id):
         SELECT t.*, 
                CASE 
                    WHEN t.Transaction_Type = 'Transfer' AND t.Description LIKE 'Transfer from%' THEN 
-                       REGEXP_SUBSTR(t.Description, '[0-9]+')
+                       substring(t.Description from '[0-9]+')
                    WHEN t.Transaction_Type = 'Transfer' AND t.Description LIKE 'Transfer to%' THEN 
-                       REGEXP_SUBSTR(t.Description, '[0-9]+')
+                       substring(t.Description from '[0-9]+')
                    ELSE NULL 
                END as Related_Account,
                CASE 
@@ -591,8 +593,8 @@ def transfer_money(account_id):
         flash('Access denied. Please log in as a customer.', 'danger')
         return redirect(url_for('login'))
     
-    conn = mysql.connector.connect(**db_config)
-    cursor = conn.cursor(dictionary=True)
+    conn = get_db_connection()
+    cursor = conn.cursor()
     try:
         # Verify account belongs to customer
         cursor.execute("""
@@ -670,8 +672,8 @@ def view_security():
         flash('Access denied. Please log in as a customer.', 'danger')
         return redirect(url_for('login'))
     
-    conn = mysql.connector.connect(**db_config)
-    cursor = conn.cursor(dictionary=True)
+    conn = get_db_connection()
+    cursor = conn.cursor()
     
     if request.method == 'POST':
         current_password = request.form.get('current_password')
@@ -740,8 +742,8 @@ def update_security_settings(account_number):
         return redirect(url_for('login'))
     
     # Verify account belongs to customer
-    conn = mysql.connector.connect(**db_config)
-    cursor = conn.cursor(dictionary=True)
+    conn = get_db_connection()
+    cursor = conn.cursor()
     cursor.execute("""
         SELECT * FROM accounts 
         WHERE Account_Number = %s AND Customer_ID = %s AND Status = 'Active'
@@ -760,23 +762,23 @@ def update_security_settings(account_number):
         
         # Update Two-Factor Authentication
         cursor.execute("""
-            INSERT INTO security (Account_Number, Security_Type, Status, Last_Updated)
+            INSERT INTO security ("Account_Number", "Security_Type", "Status", "Last_Updated")
             VALUES (%s, 'Two-Factor Authentication', %s, NOW())
-            ON DUPLICATE KEY UPDATE Status = %s, Last_Updated = NOW()
+            ON CONFLICT ("Account_Number", "Security_Type") DO UPDATE SET "Status" = %s, "Last_Updated" = NOW()
         """, (account_number, two_factor, two_factor))
         
         # Update Fraud Alert
         cursor.execute("""
-            INSERT INTO security (Account_Number, Security_Type, Status, Last_Updated)
+            INSERT INTO security ("Account_Number", "Security_Type", "Status", "Last_Updated")
             VALUES (%s, 'Fraud Alert', %s, NOW())
-            ON DUPLICATE KEY UPDATE Status = %s, Last_Updated = NOW()
+            ON CONFLICT ("Account_Number", "Security_Type") DO UPDATE SET "Status" = %s, "Last_Updated" = NOW()
         """, (account_number, fraud_alert, fraud_alert))
         
         # Update Transaction Monitoring
         cursor.execute("""
-            INSERT INTO security (Account_Number, Security_Type, Status, Last_Updated)
+            INSERT INTO security ("Account_Number", "Security_Type", "Status", "Last_Updated")
             VALUES (%s, 'Transaction Monitoring', %s, NOW())
-            ON DUPLICATE KEY UPDATE Status = %s, Last_Updated = NOW()
+            ON CONFLICT ("Account_Number", "Security_Type") DO UPDATE SET "Status" = %s, "Last_Updated" = NOW()
         """, (account_number, transaction_monitoring, transaction_monitoring))
         
         conn.commit()
@@ -805,14 +807,14 @@ def pay_loan(loan_id):
         flash('Access denied. Please log in as a customer.', 'danger')
         return redirect(url_for('login'))
     
-    conn = mysql.connector.connect(**db_config)
-    cursor = conn.cursor(dictionary=True)
+    conn = get_db_connection()
+    cursor = conn.cursor()
     
     try:
         # Get loan details with bank name
         cursor.execute("""
             SELECT l.*, a.Account_Number as Loan_Account, a.Balance as Loan_Account_Balance, b.Name as Bank_Name,
-                   DATEDIFF(l.End_Date, l.Start_Date) as Duration_Days
+                   (DATE(l.End_Date) - DATE(l.Start_Date)) as Duration_Days
             FROM loans l 
             JOIN accounts a ON l.Account_Number = a.Account_Number 
             JOIN bank b ON a.Bank_ID = b.Bank_ID
@@ -968,8 +970,8 @@ def view_all_accounts():
         flash('Access denied. Please log in as an admin.', 'danger')
         return redirect(url_for('login'))
     
-    conn = mysql.connector.connect(**db_config)
-    cursor = conn.cursor(dictionary=True)
+    conn = get_db_connection()
+    cursor = conn.cursor()
     cursor.execute("""
         SELECT a.*, c.Name as Customer_Name, b.Name as Bank_Name 
         FROM accounts a 
@@ -989,8 +991,8 @@ def view_all_loans():
         flash('Access denied. Please log in as an admin.', 'danger')
         return redirect(url_for('login'))
     
-    conn = mysql.connector.connect(**db_config)
-    cursor = conn.cursor(dictionary=True)
+    conn = get_db_connection()
+    cursor = conn.cursor()
     cursor.execute("""
         SELECT l.*, c.Name as Customer_Name, b.Name as Bank_Name 
         FROM loans l 
@@ -1011,8 +1013,8 @@ def view_all_transactions():
         flash('Access denied. Please log in as an admin.', 'danger')
         return redirect(url_for('login'))
     
-    conn = mysql.connector.connect(**db_config)
-    cursor = conn.cursor(dictionary=True)
+    conn = get_db_connection()
+    cursor = conn.cursor()
     cursor.execute("""
         SELECT t.*, a.Account_Number, a.Balance, c.Name as Customer_Name, b.Name as Bank_Name 
         FROM transactions t 
@@ -1034,8 +1036,8 @@ def add_amount(account_id):
     if not isinstance(current_user, User) or current_user.role != 'admin':
         flash('Access denied. Please log in as an admin.', 'danger')
         return redirect(url_for('login'))
-    conn = mysql.connector.connect(**db_config)
-    cursor = conn.cursor(dictionary=True)
+    conn = get_db_connection()
+    cursor = conn.cursor()
     cursor.execute("SELECT a.*, c.Name as Customer_Name, b.Name as Bank_Name FROM accounts a JOIN customers c ON a.Customer_ID = c.Customer_ID JOIN bank b ON a.Bank_ID = b.Bank_ID WHERE a.Account_Number = %s", (account_id,))
     account = cursor.fetchone()
     if not account:
@@ -1077,8 +1079,8 @@ def admin_view_transactions(account_id):
     if not isinstance(current_user, User) or current_user.role != 'admin':
         flash('Access denied. Please log in as an admin.', 'danger')
         return redirect(url_for('login'))
-    conn = mysql.connector.connect(**db_config)
-    cursor = conn.cursor(dictionary=True)
+    conn = get_db_connection()
+    cursor = conn.cursor()
     cursor.execute("""
         SELECT a.*, b.Name 
         FROM accounts a 
@@ -1097,9 +1099,9 @@ def admin_view_transactions(account_id):
         SELECT t.*, 
                CASE 
                    WHEN t.Transaction_Type = 'Transfer' AND t.Description LIKE 'Transfer from%' THEN 
-                       REGEXP_SUBSTR(t.Description, '[0-9]+')
+                       substring(t.Description from '[0-9]+')
                    WHEN t.Transaction_Type = 'Transfer' AND t.Description LIKE 'Transfer to%' THEN 
-                       REGEXP_SUBSTR(t.Description, '[0-9]+')
+                       substring(t.Description from '[0-9]+')
                    ELSE NULL 
                END as Related_Account,
                CASE 
@@ -1145,16 +1147,16 @@ def admin_security_settings():
         flash('Access denied. Please log in as an admin.', 'danger')
         return redirect(url_for('login'))
     
-    conn = mysql.connector.connect(**db_config)
-    cursor = conn.cursor(dictionary=True)
+    conn = get_db_connection()
+    cursor = conn.cursor()
     
     try:
         # Get all accounts with their security settings
         cursor.execute("""
             SELECT a.Account_Number, a.Customer_ID, c.Name as Customer_Name, b.Name as Bank_Name,
-                   GROUP_CONCAT(
-                       CONCAT(s.Security_Type, ':', s.Status)
-                       ORDER BY s.Security_Type
+                   STRING_AGG(
+                       CONCAT(s.Security_Type, ':', s.Status),
+                       ',' ORDER BY s.Security_Type
                    ) as Security_Settings
             FROM accounts a
             JOIN customers c ON a.Customer_ID = c.Customer_ID
@@ -1187,8 +1189,8 @@ def admin_update_security(account_number):
         flash('Access denied. Please log in as an admin.', 'danger')
         return redirect(url_for('login'))
     
-    conn = mysql.connector.connect(**db_config)
-    cursor = conn.cursor(dictionary=True)
+    conn = get_db_connection()
+    cursor = conn.cursor()
     
     try:
         # Get form data
@@ -1198,23 +1200,23 @@ def admin_update_security(account_number):
         
         # Update Two-Factor Authentication
         cursor.execute("""
-            INSERT INTO security (Account_Number, Security_Type, Status, Last_Updated)
+            INSERT INTO security ("Account_Number", "Security_Type", "Status", "Last_Updated")
             VALUES (%s, 'Two-Factor Authentication', %s, NOW())
-            ON DUPLICATE KEY UPDATE Status = %s, Last_Updated = NOW()
+            ON CONFLICT ("Account_Number", "Security_Type") DO UPDATE SET "Status" = %s, "Last_Updated" = NOW()
         """, (account_number, two_factor, two_factor))
         
         # Update Fraud Alert
         cursor.execute("""
-            INSERT INTO security (Account_Number, Security_Type, Status, Last_Updated)
+            INSERT INTO security ("Account_Number", "Security_Type", "Status", "Last_Updated")
             VALUES (%s, 'Fraud Alert', %s, NOW())
-            ON DUPLICATE KEY UPDATE Status = %s, Last_Updated = NOW()
+            ON CONFLICT ("Account_Number", "Security_Type") DO UPDATE SET "Status" = %s, "Last_Updated" = NOW()
         """, (account_number, fraud_alert, fraud_alert))
         
         # Update Transaction Monitoring
         cursor.execute("""
-            INSERT INTO security (Account_Number, Security_Type, Status, Last_Updated)
+            INSERT INTO security ("Account_Number", "Security_Type", "Status", "Last_Updated")
             VALUES (%s, 'Transaction Monitoring', %s, NOW())
-            ON DUPLICATE KEY UPDATE Status = %s, Last_Updated = NOW()
+            ON CONFLICT ("Account_Number", "Security_Type") DO UPDATE SET "Status" = %s, "Last_Updated" = NOW()
         """, (account_number, transaction_monitoring, transaction_monitoring))
         
         conn.commit()
@@ -1238,8 +1240,8 @@ def admin_view_investments():
         return redirect(url_for('login'))
     
     try:
-        conn = mysql.connector.connect(**db_config)
-        cursor = conn.cursor(dictionary=True)
+        conn = get_db_connection()
+        cursor = conn.cursor()
         
         # First, let's check if the investments table exists and has the correct structure
         cursor.execute("""
@@ -1264,7 +1266,7 @@ def admin_view_investments():
                             Start_Date, Maturity_Date, Monthly_Payment
                         ) VALUES (
                             %s, 'Fixed Deposit', 10000.00,
-                            CURDATE(), DATE_ADD(CURDATE(), INTERVAL 1 YEAR),
+                            CURRENT_DATE, CURRENT_DATE + INTERVAL '1 year',
                             1000.00
                         )
                     """, (customer['Customer_ID'],))
@@ -1276,8 +1278,8 @@ def admin_view_investments():
                    c.Name as Customer_Name,
                    a.Account_Number,
                    b.Name as Bank_Name,
-                   DATE_FORMAT(i.Start_Date, '%Y-%m-%d') as Start_Date,
-                   DATE_FORMAT(i.Maturity_Date, '%Y-%m-%d') as Maturity_Date
+                   TO_CHAR(i.Start_Date, 'YYYY-MM-DD') as Start_Date,
+                   TO_CHAR(i.Maturity_Date, 'YYYY-MM-DD') as Maturity_Date
             FROM investments i
             JOIN customers c ON i.Customer_ID = c.Customer_ID
             JOIN accounts a ON i.Payment_Account = a.Account_Number
@@ -1290,7 +1292,7 @@ def admin_view_investments():
         conn.close()
         
         return render_template('admin_investments.html', investments=investments)
-    except mysql.connector.Error as err:
+    except psycopg2.Error as err:
         print(f"Database error in admin_view_investments: {str(err)}")
         flash(f'Database error: {str(err)}', 'danger')
         return redirect(url_for('admin_dashboard'))
@@ -1307,16 +1309,16 @@ def view_investments():
         return redirect(url_for('login'))
     
     try:
-        conn = mysql.connector.connect(**db_config)
-        cursor = conn.cursor(dictionary=True)
+        conn = get_db_connection()
+        cursor = conn.cursor()
         
         # Get all investments for the current customer
         cursor.execute("""
             SELECT i.*, 
                    a.Account_Number,
                    b.Name as Bank_Name,
-                   DATE_FORMAT(i.Start_Date, '%Y-%m-%d') as Start_Date,
-                   DATE_FORMAT(i.Maturity_Date, '%Y-%m-%d') as Maturity_Date
+                   TO_CHAR(i.Start_Date, 'YYYY-MM-DD') as Start_Date,
+                   TO_CHAR(i.Maturity_Date, 'YYYY-MM-DD') as Maturity_Date
             FROM investments i
             JOIN accounts a ON i.Payment_Account = a.Account_Number
             JOIN bank b ON a.Bank_ID = b.Bank_ID
@@ -1329,7 +1331,7 @@ def view_investments():
         conn.close()
         
         return render_template('customer_investments.html', investments=investments)
-    except mysql.connector.Error as err:
+    except psycopg2.Error as err:
         print(f"Database error in view_investments: {str(err)}")
         flash(f'Database error: {str(err)}', 'danger')
         return redirect(url_for('customer_dashboard'))
@@ -1345,8 +1347,8 @@ def close_investment(investment_id):
         flash('Access denied. Please log in as a customer.', 'danger')
         return redirect(url_for('login'))
     
-    conn = mysql.connector.connect(**db_config)
-    cursor = conn.cursor(dictionary=True)
+    conn = get_db_connection()
+    cursor = conn.cursor()
     
     try:
         # Get investment details
@@ -1419,8 +1421,8 @@ def new_investment():
         account_number = request.form['account_number']
         
         # Get account details with bank name
-        conn = mysql.connector.connect(**db_config)
-        cursor = conn.cursor(dictionary=True)
+        conn = get_db_connection()
+        cursor = conn.cursor()
         cursor.execute("""
             SELECT a.*, b.Name as Bank_Name 
             FROM accounts a 
@@ -1453,9 +1455,6 @@ def new_investment():
         monthly_payment = amount / duration_months
         
         try:
-            # Start transaction
-            cursor.execute("START TRANSACTION")
-            
             # Create investment
             cursor.execute("""
                 INSERT INTO investments (
@@ -1463,13 +1462,14 @@ def new_investment():
                     Maturity_Date, Status, Return_Rate, Monthly_Payment,
                     Payment_Account, Bank_Name, Account_Number
                 ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                RETURNING "Investment_ID"
             """, (
                 current_user.id, investment_type, amount, start_date,
                 maturity_date, 'Active', return_rate, monthly_payment,
                 account_number, account['Bank_Name'], account_number
             ))
             
-            investment_id = cursor.lastrowid
+            investment_id = cursor.fetchone()['Investment_ID']
             
             # Deduct amount from account
             cursor.execute("""
@@ -1506,8 +1506,8 @@ def new_investment():
             conn.close()
     
     # GET request - show form
-    conn = mysql.connector.connect(**db_config)
-    cursor = conn.cursor(dictionary=True)
+    conn = get_db_connection()
+    cursor = conn.cursor()
     cursor.execute("""
         SELECT a.*, b.Name as Bank_Name 
         FROM accounts a 
@@ -1528,8 +1528,8 @@ def view_investment_details(investment_id):
         return redirect(url_for('login'))
     
     try:
-        conn = mysql.connector.connect(**db_config)
-        cursor = conn.cursor(dictionary=True)
+        conn = get_db_connection()
+        cursor = conn.cursor()
         
         # Get investment details with customer and account information
         cursor.execute("""
@@ -1537,11 +1537,11 @@ def view_investment_details(investment_id):
                    c.Name as Customer_Name, 
                    a.Account_Number, 
                    b.Name as Bank_Name,
-                   DATEDIFF(i.Maturity_Date, CURDATE()) as days_remaining,
-                   DATEDIFF(i.Maturity_Date, i.Start_Date) as total_days,
-                   (DATEDIFF(CURDATE(), i.Start_Date) / DATEDIFF(i.Maturity_Date, i.Start_Date) * 100) as progress,
-                   DATE_FORMAT(i.Start_Date, '%Y-%m-%d') as Start_Date,
-                   DATE_FORMAT(i.Maturity_Date, '%Y-%m-%d') as Maturity_Date,
+                   (i.Maturity_Date - CURRENT_DATE) as days_remaining,
+                   (i.Maturity_Date - i.Start_Date) as total_days,
+                   (CASE WHEN (i.Maturity_Date - i.Start_Date) = 0 THEN 0 ELSE ((CURRENT_DATE - i.Start_Date)::float / (i.Maturity_Date - i.Start_Date) * 100) END) as progress,
+                   TO_CHAR(i.Start_Date, 'YYYY-MM-DD') as Start_Date,
+                   TO_CHAR(i.Maturity_Date, 'YYYY-MM-DD') as Maturity_Date,
                    CASE 
                        WHEN i.Investment_Type = 'Fixed Deposit' THEN 5.5
                        WHEN i.Investment_Type = 'Recurring Deposit' THEN 6.0
@@ -1580,7 +1580,7 @@ def view_investment_details(investment_id):
         
         # Get payment history
         cursor.execute("""
-            SELECT t.*, DATE_FORMAT(t.Timestamp, '%Y-%m-%d %H:%i') as Formatted_Time
+            SELECT t.*, TO_CHAR(t.Timestamp, 'YYYY-MM-DD HH24:MI') as Formatted_Time
             FROM transactions t
             WHERE t.Account_Number = %s 
             AND t.Description LIKE %s
@@ -1607,8 +1607,8 @@ def pay_investment(investment_id):
         flash('Access denied. Please log in as a customer.', 'danger')
         return redirect(url_for('login'))
     
-    conn = mysql.connector.connect(**db_config)
-    cursor = conn.cursor(dictionary=True)
+    conn = get_db_connection()
+    cursor = conn.cursor()
     
     try:
         # Get investment details
@@ -1715,14 +1715,14 @@ def pay_investment(investment_id):
         conn.close()
 
 def update_transaction_timestamps():
-    conn = mysql.connector.connect(**db_config)
-    cursor = conn.cursor(dictionary=True)
+    conn = get_db_connection()
+    cursor = conn.cursor()
     try:
         # Get all transactions from today
         cursor.execute("""
             SELECT * FROM transactions 
-            WHERE DATE(Timestamp) = CURDATE()
-            ORDER BY Transaction_ID
+            WHERE DATE("Timestamp") = CURRENT_DATE
+            ORDER BY "Transaction_ID"
         """)
         transactions = cursor.fetchall()
         
